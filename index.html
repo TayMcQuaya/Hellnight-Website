@@ -386,10 +386,26 @@
       border-color: var(--blood);
       box-shadow: 0 0 10px var(--blood-glow);
     }
+
+    .crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: var(--text);
+      opacity: 0.7;
+      pointer-events: none;
+      z-index: 1001;
+      display: none;
+      text-shadow: 0 0 5px var(--blood-glow);
+    }
   </style>
 </head>
 <body>
   <div id="tunnel-container"></div>
+
+  <div class="crosshair" id="crosshair">+</div>
 
   <div class="scanlines"></div>
   <div class="vignette"></div>
@@ -476,24 +492,61 @@
     </section>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
   <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        "three": "https://esm.sh/three@0.163.0",
+        "three/addons/": "https://esm.sh/three@0.163.0/examples/jsm/",
+        "postprocessing": "https://esm.sh/postprocessing@6.35.3"
       }
     }
   </script>
 
   <script type="module">
     import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    import {
+      EffectComposer,
+      RenderPass,
+      EffectPass,
+      BloomEffect,
+      ChromaticAberrationEffect,
+      VignetteEffect,
+      NoiseEffect,
+      BlendFunction
+    } from 'postprocessing';
 
     let scene, camera, renderer;
+    let composer, bloomEffect, chromaticAberrationEffect, noiseEffect;
     let tunnelGroup;
     let currentSection = 0;
     let targetZ = 5;
     let currentZ = 5;
     const sectionDepth = 20;
+
+    let flashlight;
+    const mouse = new THREE.Vector2();
+    const raycaster = new THREE.Raycaster();
+    const doorMeshes = [];
+    let hoveredDoor = null;
+
+    const tunnelLights = [];
+
+    let controls;
+    let isExploring = false;
+    const moveState = { forward: false, backward: false, left: false, right: false, sprint: false };
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    let prevTime = performance.now();
+
+    let dustParticles;
+    let fogLayers;
+
+    let creature;
+    let creatureVisible = false;
 
     function init() {
       scene = new THREE.Scene();
@@ -512,9 +565,15 @@
 
       createTunnel();
       createLights();
+      createFlashlight();
+      createFogLayers();
+      setupPostProcessing();
+      setupMouseTracking();
+      initExplorationControls();
 
       window.addEventListener('resize', onWindowResize);
       setupScrollDetection();
+      setupScrollEvents();
 
       animate();
     }
@@ -588,6 +647,7 @@
       const door = new THREE.Mesh(new THREE.BoxGeometry(1.6, doorHeight - 0.3, 0.12), doorMat);
       door.position.set(0, doorHeight / 2, -0.15);
       doorGroup.add(door);
+      doorMeshes.push(door);
 
       const handle = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, 0.12, 0.18),
@@ -1021,6 +1081,12 @@
         light.position.set(0, 3.5, z);
         scene.add(light);
 
+        tunnelLights.push({
+          light,
+          baseIntensity: 5,
+          flickerPhase: Math.random() * Math.PI * 2
+        });
+
         const fixture = new THREE.Mesh(
           new THREE.BoxGeometry(0.7, 0.14, 0.4),
           new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.95 })
@@ -1038,10 +1104,387 @@
       }
     }
 
+    function createFlashlight() {
+      flashlight = new THREE.SpotLight(0xffeedd, 5, 50, Math.PI / 5, 0.3, 0.5);
+      flashlight.position.copy(camera.position);
+      scene.add(flashlight);
+      scene.add(flashlight.target);
+    }
+
+    function createDustParticles() {
+      const particleCount = 1500;
+      const geometry = new THREE.PlaneGeometry(0.03, 0.03);
+      const material = new THREE.MeshBasicMaterial({
+        color: 0xffeedd,
+        transparent: true,
+        opacity: 0.25,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      dustParticles = new THREE.InstancedMesh(geometry, material, particleCount);
+
+      const dummy = new THREE.Object3D();
+      const positions = [];
+
+      for (let i = 0; i < particleCount; i++) {
+        const x = (Math.random() - 0.5) * 5;
+        const y = (Math.random() - 0.5) * 6;
+        const z = Math.random() * -100 + 10;
+
+        positions.push({
+          x, y, z,
+          speedX: (Math.random() - 0.5) * 0.002,
+          speedY: (Math.random() - 0.5) * 0.001,
+          phase: Math.random() * Math.PI * 2
+        });
+
+        dummy.position.set(x, y, z);
+        dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+        dummy.updateMatrix();
+        dustParticles.setMatrixAt(i, dummy.matrix);
+      }
+
+      dustParticles.instanceMatrix.needsUpdate = true;
+      dustParticles.userData.positions = positions;
+      scene.add(dustParticles);
+    }
+
+    function createFogLayers() {
+      fogLayers = new THREE.Group();
+
+      const fogMaterial = new THREE.MeshBasicMaterial({
+        color: 0x1a0a0a,
+        transparent: true,
+        opacity: 0.08,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      for (let i = 0; i < 25; i++) {
+        const fog = new THREE.Mesh(
+          new THREE.PlaneGeometry(6, 5),
+          fogMaterial.clone()
+        );
+        fog.position.set(0, 0.5, 5 - i * 4);
+        fog.material.opacity = 0.05 + (i / 25) * 0.1;
+        fogLayers.add(fog);
+      }
+
+      scene.add(fogLayers);
+    }
+
+    function updateDust(time) {
+      const dummy = new THREE.Object3D();
+      const positions = dustParticles.userData.positions;
+
+      for (let i = 0; i < positions.length; i++) {
+        const p = positions[i];
+
+        p.x += Math.sin(time * 0.5 + p.phase) * 0.0005 + p.speedX;
+        p.y += Math.sin(time * 0.3 + p.phase * 0.5) * 0.0003 + p.speedY;
+        p.z += 0.003;
+
+        if (p.z > camera.position.z + 8) {
+          p.z = camera.position.z - 60;
+          p.x = (Math.random() - 0.5) * 5;
+          p.y = (Math.random() - 0.5) * 6;
+        }
+
+        dummy.position.set(p.x, p.y, p.z);
+        dummy.rotation.z = time * 0.1 + i * 0.01;
+        dummy.updateMatrix();
+        dustParticles.setMatrixAt(i, dummy.matrix);
+      }
+
+      dustParticles.instanceMatrix.needsUpdate = true;
+    }
+
+    function createCreature() {
+      creature = new THREE.Group();
+
+      const bodyMat = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      const torso = new THREE.Mesh(
+        new THREE.BoxGeometry(0.7, 1.6, 0.25),
+        bodyMat
+      );
+      torso.position.y = 0.8;
+      creature.add(torso);
+
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.3, 8, 8),
+        bodyMat
+      );
+      head.position.y = 1.9;
+      creature.add(head);
+
+      const armGeo = new THREE.BoxGeometry(0.12, 1.4, 0.08);
+      const leftArm = new THREE.Mesh(armGeo, bodyMat);
+      leftArm.position.set(-0.5, 0.5, 0);
+      leftArm.rotation.z = 0.25;
+      creature.add(leftArm);
+
+      const rightArm = leftArm.clone();
+      rightArm.position.x = 0.5;
+      rightArm.rotation.z = -0.25;
+      creature.add(rightArm);
+
+      const legGeo = new THREE.BoxGeometry(0.15, 1.2, 0.1);
+      const leftLeg = new THREE.Mesh(legGeo, bodyMat);
+      leftLeg.position.set(-0.2, -0.6, 0);
+      creature.add(leftLeg);
+
+      const rightLeg = leftLeg.clone();
+      rightLeg.position.x = 0.2;
+      creature.add(rightLeg);
+
+      creature.visible = false;
+      creature.position.set(0, -1, -45);
+      scene.add(creature);
+    }
+
+    function showCreature(z = -40, duration = 3000) {
+      creature.position.z = z;
+      creature.position.x = (Math.random() - 0.5) * 2;
+      creature.visible = true;
+      creatureVisible = true;
+
+      setTimeout(() => {
+        creature.visible = false;
+        creatureVisible = false;
+      }, duration);
+    }
+
+    function updateCreature(time) {
+      if (!creatureVisible) return;
+
+      creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
+
+      creature.rotation.z = Math.sin(time * 2) * 0.08;
+      creature.position.y = -1 + Math.sin(time * 1.5) * 0.05;
+    }
+
+    function setupMouseTracking() {
+      document.addEventListener('mousemove', (event) => {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      });
+    }
+
+    function updateFlashlight() {
+      flashlight.position.copy(camera.position);
+
+      if (isExploring) {
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction);
+        const targetPoint = camera.position.clone().add(direction.multiplyScalar(20));
+        flashlight.target.position.copy(targetPoint);
+      } else {
+        raycaster.setFromCamera(mouse, camera);
+        const targetPoint = camera.position.clone().add(
+          raycaster.ray.direction.multiplyScalar(20)
+        );
+        flashlight.target.position.copy(targetPoint);
+      }
+    }
+
+    function updateCameraParallax() {
+      const lookX = -mouse.x * 0.03;
+      const lookY = mouse.y * 0.02;
+      camera.rotation.x = lookY;
+      camera.rotation.y = lookX;
+    }
+
+    function checkDoorHover() {
+      if (doorMeshes.length === 0) return;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(doorMeshes);
+
+      if (intersects.length > 0) {
+        if (hoveredDoor !== intersects[0].object) {
+          if (hoveredDoor) {
+            hoveredDoor.material.emissiveIntensity = 0.3;
+          }
+          hoveredDoor = intersects[0].object;
+          hoveredDoor.material.emissiveIntensity = 0.9;
+          document.body.style.cursor = 'pointer';
+        }
+      } else if (hoveredDoor) {
+        hoveredDoor.material.emissiveIntensity = 0.3;
+        hoveredDoor = null;
+        document.body.style.cursor = 'crosshair';
+      }
+    }
+
+    function updateLightFlicker(time) {
+      tunnelLights.forEach((lightData) => {
+        const { light, baseIntensity, flickerPhase } = lightData;
+
+        const flicker =
+          Math.sin(time * 5 + flickerPhase) * 0.1 +
+          Math.sin(time * 13 + flickerPhase * 2) * 0.05 +
+          (Math.random() > 0.995 ? -0.4 : 0);
+
+        light.intensity = baseIntensity * (1 + flicker);
+      });
+    }
+
+    function triggerMassFlicker(duration = 2000) {
+      const startTime = performance.now();
+
+      function flicker() {
+        const elapsed = performance.now() - startTime;
+        if (elapsed > duration) {
+          tunnelLights.forEach(l => l.light.intensity = l.baseIntensity);
+          return;
+        }
+
+        tunnelLights.forEach(l => {
+          l.light.intensity = Math.random() > 0.5 ? l.baseIntensity * 0.1 : l.baseIntensity * 1.5;
+        });
+
+        setTimeout(flicker, 50 + Math.random() * 100);
+      }
+
+      flicker();
+    }
+
+    function initExplorationControls() {
+      controls = new PointerLockControls(camera, document.body);
+
+      document.addEventListener('keydown', (e) => {
+        if (!isExploring) return;
+        switch(e.code) {
+          case 'KeyW': moveState.forward = true; break;
+          case 'KeyS': moveState.backward = true; break;
+          case 'KeyA': moveState.left = true; break;
+          case 'KeyD': moveState.right = true; break;
+          case 'ShiftLeft':
+          case 'ShiftRight': moveState.sprint = true; break;
+        }
+      });
+
+      document.addEventListener('keyup', (e) => {
+        switch(e.code) {
+          case 'KeyW': moveState.forward = false; break;
+          case 'KeyS': moveState.backward = false; break;
+          case 'KeyA': moveState.left = false; break;
+          case 'KeyD': moveState.right = false; break;
+          case 'ShiftLeft':
+          case 'ShiftRight': moveState.sprint = false; break;
+        }
+      });
+
+      controls.addEventListener('lock', () => {
+        isExploring = true;
+        document.querySelector('.scroll-container').style.display = 'none';
+        document.querySelector('header').style.display = 'none';
+        document.querySelector('.depth-indicator').style.display = 'none';
+        document.getElementById('crosshair').style.display = 'block';
+      });
+
+      controls.addEventListener('unlock', () => {
+        isExploring = false;
+        document.querySelector('.scroll-container').style.display = 'block';
+        document.querySelector('header').style.display = 'flex';
+        document.querySelector('.depth-indicator').style.display = 'flex';
+        document.getElementById('crosshair').style.display = 'none';
+      });
+
+      document.querySelector('.cta-btn').addEventListener('click', () => {
+        controls.lock();
+      });
+    }
+
+    function updateMovement() {
+      if (!isExploring) return;
+
+      const time = performance.now();
+      const delta = (time - prevTime) / 1000;
+      prevTime = time;
+
+      const speed = moveState.sprint ? 120.0 : 50.0;
+
+      velocity.x -= velocity.x * 10.0 * delta;
+      velocity.z -= velocity.z * 10.0 * delta;
+
+      direction.z = Number(moveState.forward) - Number(moveState.backward);
+      direction.x = Number(moveState.right) - Number(moveState.left);
+      direction.normalize();
+
+      if (moveState.forward || moveState.backward) {
+        velocity.z -= direction.z * speed * delta;
+      }
+      if (moveState.left || moveState.right) {
+        velocity.x -= direction.x * speed * delta;
+      }
+
+      controls.moveRight(-velocity.x * delta);
+      controls.moveForward(-velocity.z * delta);
+
+      camera.position.y = 0.5;
+
+      const pos = camera.position;
+      pos.x = THREE.MathUtils.clamp(pos.x, -2, 2);
+      pos.z = THREE.MathUtils.clamp(pos.z, -58, 6);
+    }
+
+    function setupPostProcessing() {
+      composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+
+      bloomEffect = new BloomEffect({
+        intensity: 1.2,
+        luminanceThreshold: 0.3,
+        luminanceSmoothing: 0.7,
+        mipmapBlur: true
+      });
+
+      chromaticAberrationEffect = new ChromaticAberrationEffect({
+        offset: new THREE.Vector2(0.002, 0.002),
+        radialModulation: true,
+        modulationOffset: 0.15
+      });
+
+      const vignetteEffect = new VignetteEffect({
+        darkness: 0.6,
+        offset: 0.3
+      });
+
+      noiseEffect = new NoiseEffect({
+        blendFunction: BlendFunction.OVERLAY,
+        premultiply: true
+      });
+      noiseEffect.blendMode.opacity.value = 0.12;
+
+      composer.addPass(new EffectPass(camera,
+        bloomEffect,
+        chromaticAberrationEffect,
+        vignetteEffect,
+        noiseEffect
+      ));
+    }
+
+    function triggerDistortion(intensity = 0.01, duration = 500) {
+      const originalOffset = 0.002;
+      chromaticAberrationEffect.offset.set(intensity, intensity);
+
+      setTimeout(() => {
+        chromaticAberrationEffect.offset.set(originalOffset, originalOffset);
+      }, duration);
+    }
+
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
     }
 
     function setupScrollDetection() {
@@ -1065,19 +1508,87 @@
       chambers.forEach(chamber => observer.observe(chamber));
     }
 
+    function setupScrollEvents() {
+      gsap.registerPlugin(ScrollTrigger);
+
+      ScrollTrigger.create({
+        trigger: '#chamber-1',
+        start: 'top center',
+        onEnter: () => {
+          triggerMassFlicker(800);
+        }
+      });
+
+      ScrollTrigger.create({
+        trigger: '#chamber-2',
+        start: 'top center',
+        onEnter: () => {
+          triggerDistortion(0.008, 600);
+          setTimeout(() => triggerMassFlicker(500), 300);
+        }
+      });
+
+      ScrollTrigger.create({
+        trigger: '#chamber-3',
+        start: 'top center',
+        onEnter: () => {
+          triggerBlackout(400);
+          setTimeout(() => triggerDistortion(0.015, 1200), 400);
+        }
+      });
+
+      ScrollTrigger.create({
+        trigger: '.scroll-container',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: true,
+        onUpdate: (self) => {
+          if (isExploring) return;
+          const progress = self.progress;
+
+          scene.fog.density = 0.045 + progress * 0.025;
+
+          const aberration = 0.002 + progress * 0.004;
+          chromaticAberrationEffect.offset.set(aberration, aberration);
+
+          noiseEffect.blendMode.opacity.value = 0.12 + progress * 0.12;
+        }
+      });
+    }
+
+    function triggerBlackout(duration = 500) {
+      const originalIntensities = tunnelLights.map(l => l.light.intensity);
+      tunnelLights.forEach(l => l.light.intensity = 0);
+      flashlight.intensity = 0;
+
+      setTimeout(() => {
+        tunnelLights.forEach((l, i) => l.light.intensity = originalIntensities[i]);
+        flashlight.intensity = 5;
+      }, duration);
+    }
+
     function animate() {
       requestAnimationFrame(animate);
 
       const time = performance.now() * 0.001;
 
-      currentZ += (targetZ - currentZ) * 0.025;
-      camera.position.z = currentZ;
+      if (isExploring) {
+        updateMovement();
+      } else {
+        currentZ += (targetZ - currentZ) * 0.025;
+        camera.position.z = currentZ;
 
-      camera.position.x = Math.sin(time * 0.5) * 0.08;
-      camera.position.y = 0.5 + Math.cos(time * 0.3) * 0.04;
-      camera.rotation.z = Math.sin(time * 0.2) * 0.004;
+        camera.position.x = Math.sin(time * 0.5) * 0.08;
+        camera.position.y = 0.5 + Math.cos(time * 0.3) * 0.04;
+        camera.rotation.z = Math.sin(time * 0.2) * 0.004;
 
-      renderer.render(scene, camera);
+        updateCameraParallax();
+      }
+
+      updateFlashlight();
+      updateLightFlicker(time);
+
+      composer.render();
     }
 
     init();

@@ -6,7 +6,7 @@
   <title>DESCENT - Into The Dark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&family=Creepster&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -16,11 +16,11 @@
 
     :root {
       --bg: #0a0a0a;
-      --blood: #8b0000;
-      --blood-glow: rgba(139, 0, 0, 0.6);
+      --blood: #d02020;
+      --blood-glow: rgba(208, 32, 32, 0.7);
       --rust: #3a2a2a;
       --text: #d4c5b0;
-      --text-dim: rgba(212, 197, 176, 0.5);
+      --text-dim: rgba(212, 197, 176, 0.85);
     }
 
     html {
@@ -135,6 +135,16 @@
       position: relative;
     }
 
+    /* Center Chapter 3 vertically */
+    #chamber-3 {
+      justify-content: center;
+      align-items: center;
+    }
+
+    #chamber-3 .chamber-content {
+      text-align: center;
+    }
+
     /* Content panels - small, positioned bottom-left */
     .chamber-content {
       max-width: 450px;
@@ -203,11 +213,13 @@
     }
 
     .hero-sub {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       letter-spacing: 0.4em;
       color: var(--blood);
       text-transform: uppercase;
       margin-bottom: 3rem;
+      text-shadow: 0 0 15px var(--blood-glow), 0 1px 3px rgba(0, 0, 0, 0.8);
+      font-weight: bold;
     }
 
     .scroll-hint {
@@ -224,11 +236,12 @@
 
     /* Section styling */
     .section-marker {
-      font-size: 0.6rem;
+      font-size: 0.65rem;
       letter-spacing: 0.3em;
       color: var(--blood);
       margin-bottom: 0.75rem;
-      text-shadow: 0 0 10px var(--blood-glow);
+      text-shadow: 0 0 12px var(--blood-glow), 0 1px 2px rgba(0, 0, 0, 0.9);
+      font-weight: bold;
     }
 
     .section-marker::before,
@@ -249,6 +262,7 @@
       line-height: 1.7;
       color: var(--text-dim);
       margin-bottom: 1rem;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
     }
 
     /* Terminal */
@@ -283,45 +297,49 @@
     /* Story cards */
     .cards-row {
       display: flex;
-      gap: 1rem;
+      gap: 1.5rem;
       margin-top: 2rem;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
     }
 
     .card {
-      background: rgba(20, 15, 15, 0.8);
-      border: 1px solid var(--rust);
-      padding: 1.5rem;
-      width: 200px;
-      text-align: left;
+      background: rgba(10, 8, 8, 0.95);
+      border: 2px solid var(--blood);
+      padding: 2rem;
+      width: 220px;
+      text-align: center;
       transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.5);
     }
 
     .card:hover {
-      border-color: var(--blood);
-      box-shadow: 0 0 20px rgba(139, 0, 0, 0.3);
-      transform: translateY(-3px);
+      border-color: #cc0000;
+      box-shadow: 0 0 30px rgba(139, 0, 0, 0.5), inset 0 0 30px rgba(0, 0, 0, 0.5);
+      transform: translateY(-5px) scale(1.02);
     }
 
     .card-level {
-      font-size: 0.55rem;
-      letter-spacing: 0.2em;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
       color: var(--blood);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      text-shadow: 0 0 10px var(--blood-glow);
     }
 
     .card h3 {
       font-family: 'Special Elite', cursive;
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
+      font-size: 1.3rem;
+      margin-bottom: 0.75rem;
+      color: #fff;
+      text-shadow: 0 0 8px rgba(139, 0, 0, 0.5);
     }
 
     .card p {
-      font-size: 0.7rem;
-      line-height: 1.6;
-      color: var(--text-dim);
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--text);
     }
 
     /* CTA */
@@ -934,9 +952,9 @@
       // END WALL with "DESCENT" bloody graffiti
       const endWallZ = -62;
 
-      // Use same wall texture as tunnel walls
+      // Use same wall texture and settings as tunnel walls for consistency
       const endWallTexture = createWallTexture();
-      endWallTexture.repeat.set(1, 1);
+      endWallTexture.repeat.set(2, 2);
 
       const endWall = new THREE.Mesh(
         new THREE.PlaneGeometry(tunnelWidth, 6),
@@ -944,15 +962,15 @@
           map: endWallTexture,
           roughness: 0.7,
           metalness: 0.15,
-          color: 0x4a4038,
-          emissive: 0x1a0c08,
-          emissiveIntensity: 0.6
+          color: 0x3a3530,
+          emissive: 0x150a08,
+          emissiveIntensity: 0.5
         })
       );
       endWall.position.set(0, 1, endWallZ);
       tunnelGroup.add(endWall);
 
-      // BLOODY GRAFFITI - rough, hand-painted look
+      // BLOODY GRAFFITI - "Wanna Play?" with dripping blood effect
       const graffitiCanvas = document.createElement('canvas');
       graffitiCanvas.width = 2048;
       graffitiCanvas.height = 1024;
@@ -960,93 +978,137 @@
 
       ctx.clearRect(0, 0, 2048, 1024);
 
-      // Function to draw rough blood stroke
-      function drawBloodStroke(x, y, width, height) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        for (let i = 0; i < width; i += 3) {
-          const wobble = (Math.random() - 0.5) * 8;
-          ctx.lineTo(x + i, y + wobble);
+      // Finger smear marks in background
+      for (let i = 0; i < 8; i++) {
+        const smearX = 100 + Math.random() * 1800;
+        const smearY = 200 + Math.random() * 600;
+        ctx.save();
+        ctx.translate(smearX, smearY);
+        ctx.rotate((Math.random() - 0.5) * 0.5);
+
+        // Finger drag marks
+        for (let f = 0; f < 4; f++) {
+          ctx.fillStyle = `rgba(60, 0, 0, ${0.15 + Math.random() * 0.15})`;
+          ctx.beginPath();
+          ctx.ellipse(f * 12, 0, 8, 40 + Math.random() * 80, 0, 0, Math.PI * 2);
+          ctx.fill();
         }
-        for (let i = 0; i < height; i += 3) {
-          const wobble = (Math.random() - 0.5) * 6;
-          ctx.lineTo(x + width + wobble, y + i);
-        }
-        ctx.closePath();
-        ctx.fill();
+        ctx.restore();
       }
 
-      // Blood splatters around text
-      ctx.fillStyle = '#5a0000';
-      for (let i = 0; i < 40; i++) {
-        const x = 200 + Math.random() * 1600;
-        const y = 300 + Math.random() * 400;
-        const r = 3 + Math.random() * 15;
+      // Blood splatters
+      for (let i = 0; i < 60; i++) {
+        const x = 150 + Math.random() * 1700;
+        const y = 150 + Math.random() * 700;
+        const r = 2 + Math.random() * 12;
+
+        ctx.fillStyle = `rgba(${70 + Math.random() * 30}, 0, 0, ${0.4 + Math.random() * 0.4})`;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
-        // Splatter trails
-        if (Math.random() > 0.5) {
-          ctx.fillRect(x, y, 2 + Math.random() * 4, 20 + Math.random() * 60);
-        }
-      }
 
-      // Draw each letter by hand with rough strokes
-      const letters = 'DESCENT';
-      let xPos = 280;
-      ctx.fillStyle = '#6a0000';
-
-      for (let l = 0; l < letters.length; l++) {
-        const letter = letters[l];
-        const letterWidth = 180;
-        const baseY = 450;
-
-        // Multiple rough strokes per letter for painted look
-        for (let stroke = 0; stroke < 8; stroke++) {
-          const offsetX = (Math.random() - 0.5) * 12;
-          const offsetY = (Math.random() - 0.5) * 12;
-
-          ctx.font = `bold ${160 + Math.random() * 20}px "Special Elite", Impact, sans-serif`;
-          ctx.fillStyle = `rgba(${80 + Math.random() * 40}, 0, 0, ${0.3 + Math.random() * 0.4})`;
-          ctx.fillText(letter, xPos + offsetX, baseY + offsetY);
-        }
-
-        // Main letter
-        ctx.font = 'bold 170px "Special Elite", Impact, sans-serif';
-        ctx.fillStyle = '#8b0000';
-        ctx.fillText(letter, xPos, baseY);
-
-        // Blood drips from this letter
-        const numDrips = 1 + Math.floor(Math.random() * 3);
-        for (let d = 0; d < numDrips; d++) {
-          const dripX = xPos + 20 + Math.random() * 120;
-          const dripY = baseY + 40;
-          const dripH = 40 + Math.random() * 150;
-          const dripW = 4 + Math.random() * 8;
-
-          ctx.fillStyle = '#6a0000';
+        // Drip trails from splatters
+        if (Math.random() > 0.6) {
+          const dripLen = 30 + Math.random() * 120;
+          ctx.fillStyle = `rgba(50, 0, 0, ${0.3 + Math.random() * 0.3})`;
           ctx.beginPath();
-          ctx.moveTo(dripX, dripY);
-          ctx.quadraticCurveTo(dripX - dripW/2, dripY + dripH * 0.6, dripX, dripY + dripH);
-          ctx.quadraticCurveTo(dripX + dripW/2, dripY + dripH * 0.6, dripX, dripY);
-          ctx.fill();
-
-          // Drip end blob
-          ctx.beginPath();
-          ctx.arc(dripX, dripY + dripH, dripW * 0.8, 0, Math.PI * 2);
+          ctx.moveTo(x - 2, y);
+          ctx.quadraticCurveTo(x - 3, y + dripLen * 0.7, x, y + dripLen);
+          ctx.quadraticCurveTo(x + 3, y + dripLen * 0.7, x + 2, y);
           ctx.fill();
         }
-
-        xPos += letterWidth;
       }
 
-      // Smear marks
-      ctx.fillStyle = 'rgba(90, 0, 0, 0.3)';
-      for (let i = 0; i < 5; i++) {
-        const smearX = 300 + Math.random() * 1400;
-        const smearY = 400 + Math.random() * 200;
-        ctx.fillRect(smearX, smearY, 100 + Math.random() * 200, 20 + Math.random() * 40);
+      // Main text: "Wanna Play?"
+      const text = "Wanna Play?";
+      const baseY = 520;
+
+      // Draw text with thick bloody strokes
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Shadow/glow layer
+      for (let i = 0; i < 15; i++) {
+        ctx.font = `${200 + Math.random() * 10}px "Creepster", cursive`;
+        ctx.fillStyle = `rgba(30, 0, 0, ${0.1 + Math.random() * 0.1})`;
+        ctx.fillText(text, 1024 + (Math.random() - 0.5) * 20, baseY + (Math.random() - 0.5) * 20);
       }
+
+      // Rough painted strokes
+      for (let stroke = 0; stroke < 12; stroke++) {
+        const offsetX = (Math.random() - 0.5) * 15;
+        const offsetY = (Math.random() - 0.5) * 15;
+        ctx.font = `${195 + Math.random() * 15}px "Creepster", cursive`;
+        ctx.fillStyle = `rgba(${100 + Math.random() * 40}, 0, 0, ${0.2 + Math.random() * 0.3})`;
+        ctx.fillText(text, 1024 + offsetX, baseY + offsetY);
+      }
+
+      // Main text layer
+      ctx.font = '200px "Creepster", cursive';
+      ctx.fillStyle = '#8b0000';
+      ctx.fillText(text, 1024, baseY);
+
+      // Highlight/wet blood layer
+      ctx.font = '200px "Creepster", cursive';
+      ctx.fillStyle = 'rgba(180, 0, 0, 0.4)';
+      ctx.fillText(text, 1024 - 2, baseY - 2);
+
+      // Heavy blood drips from text
+      const dripPositions = [180, 320, 480, 620, 780, 950, 1100, 1280, 1450, 1620, 1750, 1850];
+      for (const dripX of dripPositions) {
+        if (Math.random() > 0.3) {
+          const dripStartY = baseY + 60 + Math.random() * 40;
+          const dripH = 80 + Math.random() * 250;
+          const dripW = 6 + Math.random() * 12;
+
+          // Main drip body
+          ctx.fillStyle = `rgba(${80 + Math.random() * 40}, 0, 0, 0.9)`;
+          ctx.beginPath();
+          ctx.moveTo(dripX, dripStartY);
+          ctx.quadraticCurveTo(dripX - dripW, dripStartY + dripH * 0.3, dripX - dripW/2, dripStartY + dripH * 0.6);
+          ctx.quadraticCurveTo(dripX, dripStartY + dripH, dripX, dripStartY + dripH + dripW);
+          ctx.quadraticCurveTo(dripX, dripStartY + dripH, dripX + dripW/2, dripStartY + dripH * 0.6);
+          ctx.quadraticCurveTo(dripX + dripW, dripStartY + dripH * 0.3, dripX, dripStartY);
+          ctx.fill();
+
+          // Drip blob at end
+          ctx.beginPath();
+          ctx.arc(dripX, dripStartY + dripH + dripW * 0.5, dripW * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Secondary thin drip
+          if (Math.random() > 0.5) {
+            const thinX = dripX + (Math.random() - 0.5) * 30;
+            const thinH = 40 + Math.random() * 100;
+            ctx.fillStyle = `rgba(70, 0, 0, 0.7)`;
+            ctx.beginPath();
+            ctx.ellipse(thinX, dripStartY + dripH + 30 + thinH/2, 2, thinH/2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+
+      // Handprint accent
+      ctx.save();
+      ctx.translate(1700, 650);
+      ctx.rotate(0.3);
+      ctx.fillStyle = 'rgba(80, 0, 0, 0.5)';
+      // Palm
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 45, 55, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Fingers
+      const fingerAngles = [-0.4, -0.15, 0.05, 0.25, 0.5];
+      const fingerLengths = [50, 65, 70, 60, 40];
+      for (let f = 0; f < 5; f++) {
+        ctx.save();
+        ctx.rotate(fingerAngles[f]);
+        ctx.beginPath();
+        ctx.ellipse(0, -55 - fingerLengths[f]/2, 12, fingerLengths[f]/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
 
       const graffitiTexture = new THREE.CanvasTexture(graffitiCanvas);
 
@@ -1061,9 +1123,9 @@
       graffitiPlane.position.set(0, 1, endWallZ + 0.05);
       tunnelGroup.add(graffitiPlane);
 
-      // Light illuminating the end wall
-      const endWallLight = new THREE.PointLight(0xff2200, 3, 20);
-      endWallLight.position.set(0, 2, endWallZ + 5);
+      // Subtle light illuminating the end wall (matches tunnel lighting)
+      const endWallLight = new THREE.PointLight(0xff2200, 1.5, 15);
+      endWallLight.position.set(0, 2, endWallZ + 8);
       scene.add(endWallLight);
 
       scene.add(tunnelGroup);
@@ -1087,20 +1149,21 @@
           flickerPhase: Math.random() * Math.PI * 2
         });
 
+        // Bright emissive fixture - bloom will create natural glow
         const fixture = new THREE.Mesh(
-          new THREE.BoxGeometry(0.7, 0.14, 0.4),
-          new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.95 })
+          new THREE.BoxGeometry(0.7, 0.12, 0.35),
+          new THREE.MeshBasicMaterial({ color: 0xff6633 })
         );
-        fixture.position.set(0, 3.9, z);
+        fixture.position.set(0, 3.92, z);
         tunnelGroup.add(fixture);
 
-        const halo = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.8, 1),
-          new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+        // Inner bright core for stronger bloom
+        const core = new THREE.Mesh(
+          new THREE.BoxGeometry(0.5, 0.08, 0.25),
+          new THREE.MeshBasicMaterial({ color: 0xffaa66 })
         );
-        halo.position.set(0, 3.85, z);
-        halo.rotation.x = Math.PI / 2;
-        tunnelGroup.add(halo);
+        core.position.set(0, 3.9, z);
+        tunnelGroup.add(core);
       }
     }
 
@@ -1440,9 +1503,9 @@
       composer.addPass(new RenderPass(scene, camera));
 
       bloomEffect = new BloomEffect({
-        intensity: 1.2,
-        luminanceThreshold: 0.3,
-        luminanceSmoothing: 0.7,
+        intensity: 1.5,
+        luminanceThreshold: 0.2,
+        luminanceSmoothing: 0.8,
         mipmapBlur: true
       });
 

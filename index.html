@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DESCENT - Into The Dark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --blood: #8b0000;
+      --blood-glow: rgba(139, 0, 0, 0.6);
+      --rust: #3a2a2a;
+      --text: #d4c5b0;
+      --text-dim: rgba(212, 197, 176, 0.5);
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+    }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #000;
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* Full screen canvas */
+    #tunnel-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Overlay effects */
+    .scanlines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.1),
+        rgba(0, 0, 0, 0.1) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+    }
+
+    .vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      padding: 1.5rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Special Elite', cursive;
+      font-size: 1rem;
+      letter-spacing: 0.5em;
+      color: var(--blood);
+      text-shadow: 0 0 10px var(--blood-glow);
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+    }
+
+    nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--text);
+      text-shadow: 0 0 10px var(--blood-glow);
+    }
+
+    /* Scroll container */
+    .scroll-container {
+      position: relative;
+      z-index: 100;
+    }
+
+    /* Each section is a full viewport snap point */
+    .chamber {
+      height: 100vh;
+      width: 100%;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      text-align: left;
+      padding: 2rem 3rem 4rem 3rem;
+      position: relative;
+    }
+
+    /* Content panels - small, positioned bottom-left */
+    .chamber-content {
+      max-width: 450px;
+      padding: 1.5rem 2rem;
+      background: rgba(5, 5, 5, 0.85);
+      border: 1px solid rgba(139, 0, 0, 0.4);
+      border-left: 3px solid var(--blood);
+      backdrop-filter: blur(8px);
+      position: relative;
+    }
+
+    .chamber-content::before {
+      display: none;
+    }
+
+    .chamber-content::after {
+      display: none;
+    }
+
+    /* Hero */
+    .hero-title {
+      font-family: 'Special Elite', cursive;
+      font-size: clamp(3rem, 12vw, 8rem);
+      letter-spacing: 0.15em;
+      color: var(--text);
+      text-shadow: 0 0 30px var(--blood-glow), 0 0 60px var(--blood-glow);
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .hero-title::before,
+    .hero-title::after {
+      content: 'DESCENT';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.8;
+    }
+
+    .hero-title::before {
+      color: var(--blood);
+      animation: glitch1 3s infinite;
+      clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+    }
+
+    .hero-title::after {
+      color: #00cccc;
+      animation: glitch2 3s infinite;
+      clip-path: polygon(0 67%, 100% 67%, 100% 100%, 0 100%);
+    }
+
+    @keyframes glitch1 {
+      0%, 90%, 100% { transform: translate(0); }
+      92% { transform: translate(-3px, 1px); }
+      94% { transform: translate(3px, -1px); }
+      96% { transform: translate(-2px, -1px); }
+    }
+
+    @keyframes glitch2 {
+      0%, 90%, 100% { transform: translate(0); }
+      91% { transform: translate(3px, 1px); }
+      93% { transform: translate(-3px, -1px); }
+      95% { transform: translate(2px, 1px); }
+    }
+
+    .hero-sub {
+      font-size: 0.85rem;
+      letter-spacing: 0.4em;
+      color: var(--blood);
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+
+    .scroll-hint {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* Section styling */
+    .section-marker {
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      color: var(--blood);
+      margin-bottom: 0.75rem;
+      text-shadow: 0 0 10px var(--blood-glow);
+    }
+
+    .section-marker::before,
+    .section-marker::after {
+      display: none;
+    }
+
+    .section-title {
+      font-family: 'Special Elite', cursive;
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .section-text {
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+
+    /* Terminal */
+    .terminal {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--rust);
+      padding: 1.5rem;
+      text-align: left;
+      font-size: 0.8rem;
+      margin-top: 1.5rem;
+    }
+
+    .terminal .line {
+      margin-bottom: 0.4rem;
+    }
+
+    .terminal .prompt { color: var(--blood); }
+
+    .terminal .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 12px;
+      background: var(--text);
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* Story cards */
+    .cards-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: rgba(20, 15, 15, 0.8);
+      border: 1px solid var(--rust);
+      padding: 1.5rem;
+      width: 200px;
+      text-align: left;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      border-color: var(--blood);
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.3);
+      transform: translateY(-3px);
+    }
+
+    .card-level {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: var(--blood);
+      margin-bottom: 0.5rem;
+    }
+
+    .card h3 {
+      font-family: 'Special Elite', cursive;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .card p {
+      font-size: 0.7rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+
+    /* CTA */
+    .cta-btn {
+      padding: 1rem 2.5rem;
+      background: transparent;
+      border: 1px solid var(--blood);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: crosshair;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: var(--blood);
+      transition: left 0.3s ease;
+      z-index: -1;
+    }
+
+    .cta-btn:hover::before {
+      left: 0;
+    }
+
+    .cta-btn:hover {
+      color: #fff;
+      box-shadow: 0 0 30px var(--blood-glow);
+    }
+
+    /* Depth indicator */
+    .depth-indicator {
+      position: fixed;
+      left: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .depth-dot {
+      width: 8px;
+      height: 8px;
+      border: 1px solid var(--rust);
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .depth-dot.active {
+      background: var(--blood);
+      border-color: var(--blood);
+      box-shadow: 0 0 10px var(--blood-glow);
+    }
+  </style>
+</head>
+<body>
+  <div id="tunnel-container"></div>
+
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+
+  <header>
+    <div class="logo">DESCENT</div>
+    <nav>
+      <a href="#chamber-1">Story</a>
+      <a href="#chamber-2">Depths</a>
+      <a href="#chamber-3">Survive</a>
+    </nav>
+  </header>
+
+  <div class="depth-indicator">
+    <div class="depth-dot active" data-section="0"></div>
+    <div class="depth-dot" data-section="1"></div>
+    <div class="depth-dot" data-section="2"></div>
+    <div class="depth-dot" data-section="3"></div>
+  </div>
+
+  <div class="scroll-container">
+    <!-- Chamber 0: Hero -->
+    <section class="chamber" id="chamber-0">
+      <h1 class="hero-title">DESCENT</h1>
+      <p class="hero-sub">Something is following you</p>
+      <span class="scroll-hint">[ SCROLL TO ENTER ]</span>
+    </section>
+
+    <!-- Chamber 1: Story -->
+    <section class="chamber" id="chamber-1">
+      <div class="chamber-content">
+        <span class="section-marker">CHAPTER 01</span>
+        <h2 class="section-title">You weren't supposed to survive</h2>
+        <p class="section-text">
+          Deep beneath Tokyo's subway system lies a network of tunnels that don't appear on any map.
+          You wake in darkness. The train is gone. Something moves ahead.
+        </p>
+        <div class="terminal">
+          <div class="line"><span class="prompt">></span> LOCATION: UNKNOWN</div>
+          <div class="line"><span class="prompt">></span> DEPTH: -847m</div>
+          <div class="line"><span class="prompt">></span> WARNING: DO NOT LOOK BACK<span class="cursor"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chamber 2: Depths -->
+    <section class="chamber" id="chamber-2">
+      <div class="chamber-content">
+        <span class="section-marker">CHAPTER 02</span>
+        <h2 class="section-title">The deeper you go, the darker it gets</h2>
+        <p class="section-text">
+          Every corridor leads somewhere worse. The creature behind you never stops.
+        </p>
+        <div class="cards-row">
+          <div class="card">
+            <span class="card-level">LEVEL B1</span>
+            <h3>The Station</h3>
+            <p>Warnings written in blood on the walls.</p>
+          </div>
+          <div class="card">
+            <span class="card-level">LEVEL B4</span>
+            <h3>The Lab</h3>
+            <p>They created something. It hunts.</p>
+          </div>
+          <div class="card">
+            <span class="card-level">LEVEL B7</span>
+            <h3>The Pit</h3>
+            <p>You've gone too far.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chamber 3: Survive -->
+    <section class="chamber" id="chamber-3">
+      <div class="chamber-content">
+        <span class="section-marker">CHAPTER 03</span>
+        <h2 class="section-title">Will you escape the darkness?</h2>
+        <p class="section-text">
+          No weapons. No hiding. Only the desperate hope that you can outrun what lurks behind.
+        </p>
+        <button class="cta-btn">Begin your descent</button>
+      </div>
+    </section>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    let scene, camera, renderer;
+    let tunnelGroup;
+    let currentSection = 0;
+    let targetZ = 5;
+    let currentZ = 5;
+    const sectionDepth = 20;
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x050202);
+      // Horror fog - limited visibility, things emerge from darkness
+      scene.fog = new THREE.FogExp2(0x050202, 0.045);
+
+      camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 300);
+      camera.position.set(0, 0.5, 5);
+      camera.lookAt(0, 0.5, -10);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      document.getElementById('tunnel-container').appendChild(renderer.domElement);
+
+      createTunnel();
+      createLights();
+
+      window.addEventListener('resize', onWindowResize);
+      setupScrollDetection();
+
+      animate();
+    }
+
+    function createWallTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#1a1512';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 3000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const brightness = 20 + Math.random() * 40;
+        ctx.fillStyle = `rgba(${brightness}, ${brightness * 0.8}, ${brightness * 0.7}, 0.4)`;
+        ctx.fillRect(x, y, Math.random() * 4 + 1, Math.random() * 4 + 1);
+      }
+
+      for (let i = 0; i < 15; i++) {
+        const x = Math.random() * 512;
+        ctx.strokeStyle = `rgba(80, 30, 20, ${Math.random() * 0.4})`;
+        ctx.lineWidth = Math.random() * 8 + 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x + (Math.random() - 0.5) * 60, 512);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    function createDoor(z, side) {
+      const doorGroup = new THREE.Group();
+      const tunnelWidth = 5;
+      const doorHeight = 3.5;
+
+      const frameMat = new THREE.MeshStandardMaterial({
+        color: 0x2a1a15,
+        roughness: 0.85,
+        metalness: 0.3,
+        emissive: 0x1a0a08,
+        emissiveIntensity: 0.4
+      });
+
+      const frameTop = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 0.3), frameMat);
+      frameTop.position.y = doorHeight;
+      doorGroup.add(frameTop);
+
+      const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.18, doorHeight, 0.3), frameMat);
+      frameLeft.position.set(-0.9, doorHeight / 2, 0);
+      doorGroup.add(frameLeft);
+
+      const frameRight = frameLeft.clone();
+      frameRight.position.x = 0.9;
+      doorGroup.add(frameRight);
+
+      const doorMat = new THREE.MeshStandardMaterial({
+        color: 0x3a2a22,
+        roughness: 0.8,
+        metalness: 0.2,
+        emissive: 0x1a0a05,
+        emissiveIntensity: 0.3
+      });
+
+      const door = new THREE.Mesh(new THREE.BoxGeometry(1.6, doorHeight - 0.3, 0.12), doorMat);
+      door.position.set(0, doorHeight / 2, -0.15);
+      doorGroup.add(door);
+
+      const handle = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.12, 0.18),
+        new THREE.MeshStandardMaterial({ color: 0x5a4035, metalness: 0.6, roughness: 0.4 })
+      );
+      handle.position.set(0.5, 1.5, 0.02);
+      doorGroup.add(handle);
+
+      // ALARM LIGHT above the door (emissive mesh only for performance)
+      const alarmLight = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.15, 0.2),
+        new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.95 })
+      );
+      alarmLight.position.set(0, doorHeight + 0.5, 0.1);
+      doorGroup.add(alarmLight);
+
+      // Light glow under some doors (visual only)
+      if (Math.random() > 0.5) {
+        const glow = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.2, 0.1),
+          new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.7 })
+        );
+        glow.rotation.x = -Math.PI / 2;
+        glow.position.set(0, 0.02, 0.15);
+        doorGroup.add(glow);
+      }
+
+      const x = (tunnelWidth / 2 - 0.05) * side;
+      doorGroup.position.set(x, -2, z);
+      doorGroup.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+      return doorGroup;
+    }
+
+    function createSideCorridor(z, side) {
+      const corridorGroup = new THREE.Group();
+      const tunnelWidth = 5;
+      const corridorDepth = 12;
+      const corridorWidth = 4;
+
+      const wallTexture = createWallTexture();
+      wallTexture.repeat.set(2, 2);
+
+      const wallMat = new THREE.MeshStandardMaterial({
+        map: wallTexture,
+        roughness: 0.7,
+        metalness: 0.15,
+        color: 0x3a3530,
+        emissive: 0x150a08,
+        emissiveIntensity: 0.5
+      });
+
+      const floorMat = new THREE.MeshStandardMaterial({
+        map: wallTexture.clone(),
+        roughness: 0.75,
+        metalness: 0.1,
+        color: 0x3a3535,
+        emissive: 0x120808,
+        emissiveIntensity: 0.4
+      });
+
+      // Side corridor floor
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(corridorDepth, corridorWidth),
+        floorMat
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.rotation.z = Math.PI / 2;
+      floor.position.set(side * (tunnelWidth / 2 + corridorDepth / 2), -2, z);
+      corridorGroup.add(floor);
+
+      // Side corridor ceiling
+      const ceiling = floor.clone();
+      ceiling.rotation.x = Math.PI / 2;
+      ceiling.position.y = 4;
+      corridorGroup.add(ceiling);
+
+      // Back wall (end of corridor)
+      const backWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(corridorWidth, 6),
+        wallMat
+      );
+      backWall.rotation.y = side > 0 ? Math.PI : 0;
+      backWall.position.set(side * (tunnelWidth / 2 + corridorDepth), 1, z);
+      corridorGroup.add(backWall);
+
+      // Side walls of the corridor
+      const sideWall1 = new THREE.Mesh(
+        new THREE.PlaneGeometry(corridorDepth, 6),
+        wallMat
+      );
+      sideWall1.rotation.y = Math.PI / 2;
+      sideWall1.position.set(side * (tunnelWidth / 2 + corridorDepth / 2), 1, z - corridorWidth / 2);
+      corridorGroup.add(sideWall1);
+
+      const sideWall2 = sideWall1.clone();
+      sideWall2.rotation.y = -Math.PI / 2;
+      sideWall2.position.z = z + corridorWidth / 2;
+      corridorGroup.add(sideWall2);
+
+      // Glowing fixture at end (emissive only for performance)
+      const fixture = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 0.1, 0.3),
+        new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.9 })
+      );
+      fixture.position.set(side * (tunnelWidth / 2 + corridorDepth - 2), 3.8, z);
+      corridorGroup.add(fixture);
+
+      // Optional: something creepy at the end (silhouette)
+      if (Math.random() > 0.7) {
+        const silhouette = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 2.5, 0.3),
+          new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        silhouette.position.set(side * (tunnelWidth / 2 + corridorDepth - 1.5), 0.25, z);
+        corridorGroup.add(silhouette);
+      }
+
+      return corridorGroup;
+    }
+
+    function createTunnel() {
+      tunnelGroup = new THREE.Group();
+
+      const wallTexture = createWallTexture();
+      wallTexture.repeat.set(3, 15);
+
+      const tunnelLength = 180;
+      const tunnelWidth = 5;
+
+      const floorMat = new THREE.MeshStandardMaterial({
+        map: wallTexture.clone(),
+        roughness: 0.75,
+        metalness: 0.1,
+        color: 0x4a4040,
+        emissive: 0x1a0a08,
+        emissiveIntensity: 0.5
+      });
+
+      const wallMat = new THREE.MeshStandardMaterial({
+        map: wallTexture.clone(),
+        roughness: 0.7,
+        metalness: 0.15,
+        color: 0x4a4038,
+        emissive: 0x1a0c08,
+        emissiveIntensity: 0.6
+      });
+
+      // Floor
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(tunnelWidth, tunnelLength),
+        floorMat
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(0, -2, -tunnelLength / 2 + 20);
+      tunnelGroup.add(floor);
+
+      // Ceiling
+      const ceiling = floor.clone();
+      ceiling.rotation.x = Math.PI / 2;
+      ceiling.position.y = 4;
+      tunnelGroup.add(ceiling);
+
+      // Walls
+      const wallGeo = new THREE.PlaneGeometry(tunnelLength, 6);
+
+      const leftWall = new THREE.Mesh(wallGeo, wallMat);
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.position.set(-tunnelWidth / 2, 1, -tunnelLength / 2 + 20);
+      tunnelGroup.add(leftWall);
+
+      const rightWall = new THREE.Mesh(wallGeo, wallMat);
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.position.set(tunnelWidth / 2, 1, -tunnelLength / 2 + 20);
+      tunnelGroup.add(rightWall);
+
+      const beamMat = new THREE.MeshStandardMaterial({
+        color: 0x3a2520,
+        roughness: 0.8,
+        metalness: 0.25,
+        emissive: 0x100505,
+        emissiveIntensity: 0.3
+      });
+
+      // Support beams, doors, and side corridors
+      const corridorPositions = [4, 10, 18, 24];
+
+      // Fixed door positions: { beamIndex, side } - well spaced, no repetition, not near end
+      const doorPlacements = [
+        { i: 2, side: -1 },   // Left side early
+        { i: 5, side: 1 },    // Right side
+        { i: 7, side: -1 },   // Left side
+        { i: 12, side: 1 },   // Right side mid
+        { i: 14, side: -1 },  // Left side
+        { i: 16, side: 1 },   // Right side - last door before end
+      ];
+
+      for (let i = 0; i < 28; i++) {
+        const z = 8 - i * 6;
+        const isCorridorPos = corridorPositions.includes(i);
+
+        // Beams (skip where corridors are)
+        if (!isCorridorPos) {
+          const leftBeam = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6, 0.2), beamMat);
+          leftBeam.position.set(-tunnelWidth / 2 + 0.1, 1, z);
+          tunnelGroup.add(leftBeam);
+
+          const rightBeam = leftBeam.clone();
+          rightBeam.position.x = tunnelWidth / 2 - 0.1;
+          tunnelGroup.add(rightBeam);
+        }
+
+        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(tunnelWidth, 0.15, 0.15), beamMat);
+        topBeam.position.set(0, 4, z);
+        tunnelGroup.add(topBeam);
+
+        // Floor AND ceiling lights at EVERY SECOND beam separation (symmetric)
+        if (i % 2 === 0) {
+          const lightMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.9 });
+
+          // Floor lights
+          const floorLightLeft = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 0.08, 0.15),
+            lightMat
+          );
+          floorLightLeft.position.set(-tunnelWidth / 2 + 0.4, -1.95, z);
+          tunnelGroup.add(floorLightLeft);
+
+          const floorLightRight = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 0.08, 0.15),
+            lightMat
+          );
+          floorLightRight.position.set(tunnelWidth / 2 - 0.4, -1.95, z);
+          tunnelGroup.add(floorLightRight);
+
+          // Ceiling lights (symmetric to floor)
+          const ceilingLightLeft = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 0.08, 0.15),
+            lightMat
+          );
+          ceilingLightLeft.position.set(-tunnelWidth / 2 + 0.4, 3.95, z);
+          tunnelGroup.add(ceilingLightLeft);
+
+          const ceilingLightRight = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 0.08, 0.15),
+            lightMat
+          );
+          ceilingLightRight.position.set(tunnelWidth / 2 - 0.4, 3.95, z);
+          tunnelGroup.add(ceilingLightRight);
+        }
+
+        // Side corridors at specific positions
+        if (isCorridorPos) {
+          const side = (i % 2 === 0) ? -1 : 1;
+          const corridor = createSideCorridor(z, side);
+          tunnelGroup.add(corridor);
+        }
+
+        // Doors at fixed positions only
+        const doorPlacement = doorPlacements.find(d => d.i === i);
+        if (doorPlacement) {
+          const doorZ = z + 3; // Offset between beams
+          const door = createDoor(doorZ, doorPlacement.side);
+          tunnelGroup.add(door);
+        }
+      }
+
+      // Pipes
+      const pipeMat = new THREE.MeshStandardMaterial({
+        color: 0x4a2525,
+        roughness: 0.5,
+        metalness: 0.5
+      });
+
+      const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, tunnelLength, 8), pipeMat);
+      pipe1.rotation.x = Math.PI / 2;
+      pipe1.position.set(-2, 3.5, -tunnelLength / 2 + 20);
+      tunnelGroup.add(pipe1);
+
+      const pipe2 = pipe1.clone();
+      pipe2.position.x = 2;
+      tunnelGroup.add(pipe2);
+
+      // END WALL with "DESCENT" bloody graffiti
+      const endWallZ = -62;
+
+      // Use same wall texture as tunnel walls
+      const endWallTexture = createWallTexture();
+      endWallTexture.repeat.set(1, 1);
+
+      const endWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(tunnelWidth, 6),
+        new THREE.MeshStandardMaterial({
+          map: endWallTexture,
+          roughness: 0.7,
+          metalness: 0.15,
+          color: 0x4a4038,
+          emissive: 0x1a0c08,
+          emissiveIntensity: 0.6
+        })
+      );
+      endWall.position.set(0, 1, endWallZ);
+      tunnelGroup.add(endWall);
+
+      // BLOODY GRAFFITI - rough, hand-painted look
+      const graffitiCanvas = document.createElement('canvas');
+      graffitiCanvas.width = 2048;
+      graffitiCanvas.height = 1024;
+      const ctx = graffitiCanvas.getContext('2d');
+
+      ctx.clearRect(0, 0, 2048, 1024);
+
+      // Function to draw rough blood stroke
+      function drawBloodStroke(x, y, width, height) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        for (let i = 0; i < width; i += 3) {
+          const wobble = (Math.random() - 0.5) * 8;
+          ctx.lineTo(x + i, y + wobble);
+        }
+        for (let i = 0; i < height; i += 3) {
+          const wobble = (Math.random() - 0.5) * 6;
+          ctx.lineTo(x + width + wobble, y + i);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Blood splatters around text
+      ctx.fillStyle = '#5a0000';
+      for (let i = 0; i < 40; i++) {
+        const x = 200 + Math.random() * 1600;
+        const y = 300 + Math.random() * 400;
+        const r = 3 + Math.random() * 15;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        // Splatter trails
+        if (Math.random() > 0.5) {
+          ctx.fillRect(x, y, 2 + Math.random() * 4, 20 + Math.random() * 60);
+        }
+      }
+
+      // Draw each letter by hand with rough strokes
+      const letters = 'DESCENT';
+      let xPos = 280;
+      ctx.fillStyle = '#6a0000';
+
+      for (let l = 0; l < letters.length; l++) {
+        const letter = letters[l];
+        const letterWidth = 180;
+        const baseY = 450;
+
+        // Multiple rough strokes per letter for painted look
+        for (let stroke = 0; stroke < 8; stroke++) {
+          const offsetX = (Math.random() - 0.5) * 12;
+          const offsetY = (Math.random() - 0.5) * 12;
+
+          ctx.font = `bold ${160 + Math.random() * 20}px "Special Elite", Impact, sans-serif`;
+          ctx.fillStyle = `rgba(${80 + Math.random() * 40}, 0, 0, ${0.3 + Math.random() * 0.4})`;
+          ctx.fillText(letter, xPos + offsetX, baseY + offsetY);
+        }
+
+        // Main letter
+        ctx.font = 'bold 170px "Special Elite", Impact, sans-serif';
+        ctx.fillStyle = '#8b0000';
+        ctx.fillText(letter, xPos, baseY);
+
+        // Blood drips from this letter
+        const numDrips = 1 + Math.floor(Math.random() * 3);
+        for (let d = 0; d < numDrips; d++) {
+          const dripX = xPos + 20 + Math.random() * 120;
+          const dripY = baseY + 40;
+          const dripH = 40 + Math.random() * 150;
+          const dripW = 4 + Math.random() * 8;
+
+          ctx.fillStyle = '#6a0000';
+          ctx.beginPath();
+          ctx.moveTo(dripX, dripY);
+          ctx.quadraticCurveTo(dripX - dripW/2, dripY + dripH * 0.6, dripX, dripY + dripH);
+          ctx.quadraticCurveTo(dripX + dripW/2, dripY + dripH * 0.6, dripX, dripY);
+          ctx.fill();
+
+          // Drip end blob
+          ctx.beginPath();
+          ctx.arc(dripX, dripY + dripH, dripW * 0.8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        xPos += letterWidth;
+      }
+
+      // Smear marks
+      ctx.fillStyle = 'rgba(90, 0, 0, 0.3)';
+      for (let i = 0; i < 5; i++) {
+        const smearX = 300 + Math.random() * 1400;
+        const smearY = 400 + Math.random() * 200;
+        ctx.fillRect(smearX, smearY, 100 + Math.random() * 200, 20 + Math.random() * 40);
+      }
+
+      const graffitiTexture = new THREE.CanvasTexture(graffitiCanvas);
+
+      const graffitiPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(tunnelWidth, 4),
+        new THREE.MeshBasicMaterial({
+          map: graffitiTexture,
+          transparent: true,
+          depthWrite: false
+        })
+      );
+      graffitiPlane.position.set(0, 1, endWallZ + 0.05);
+      tunnelGroup.add(graffitiPlane);
+
+      // Light illuminating the end wall
+      const endWallLight = new THREE.PointLight(0xff2200, 3, 20);
+      endWallLight.position.set(0, 2, endWallZ + 5);
+      scene.add(endWallLight);
+
+      scene.add(tunnelGroup);
+    }
+
+    function createLights() {
+      const ambient = new THREE.AmbientLight(0x3a2828, 2.2);
+      scene.add(ambient);
+
+      // Ceiling lights - reduced count, larger range
+      for (let i = 0; i < 12; i++) {
+        const z = 6 - i * 14;
+
+        const light = new THREE.PointLight(0xff2200, 5, 35);
+        light.position.set(0, 3.5, z);
+        scene.add(light);
+
+        const fixture = new THREE.Mesh(
+          new THREE.BoxGeometry(0.7, 0.14, 0.4),
+          new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.95 })
+        );
+        fixture.position.set(0, 3.9, z);
+        tunnelGroup.add(fixture);
+
+        const halo = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.8, 1),
+          new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.35, side: THREE.DoubleSide })
+        );
+        halo.position.set(0, 3.85, z);
+        halo.rotation.x = Math.PI / 2;
+        tunnelGroup.add(halo);
+      }
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function setupScrollDetection() {
+      const chambers = document.querySelectorAll('.chamber');
+      const dots = document.querySelectorAll('.depth-dot');
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const index = Array.from(chambers).indexOf(entry.target);
+            currentSection = index;
+            targetZ = 5 - index * sectionDepth;
+
+            dots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === index);
+            });
+          }
+        });
+      }, { threshold: 0.5 });
+
+      chambers.forEach(chamber => observer.observe(chamber));
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const time = performance.now() * 0.001;
+
+      currentZ += (targetZ - currentZ) * 0.025;
+      camera.position.z = currentZ;
+
+      camera.position.x = Math.sin(time * 0.5) * 0.08;
+      camera.position.y = 0.5 + Math.cos(time * 0.3) * 0.04;
+      camera.rotation.z = Math.sin(time * 0.2) * 0.004;
+
+      renderer.render(scene, camera);
+    }
+
+    init();
+  </script>
+</body>
+</html>

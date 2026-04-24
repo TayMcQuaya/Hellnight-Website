@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Special+Elite&family=Creepster&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23050202'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='bold' fill='%23d02020'%3ED%3C/text%3E%3C/svg%3E">
   <style>
     * {
       margin: 0;
@@ -418,9 +419,244 @@
       display: none;
       text-shadow: 0 0 5px var(--blood-glow);
     }
+
+    /* Photosensitivity warning splash */
+    .warning-splash {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .warning-box {
+      max-width: 720px;
+      width: 100%;
+      border: 1px solid var(--blood);
+      border-left: 4px solid var(--blood);
+      background: rgba(10, 5, 5, 0.95);
+      padding: 4rem 3.5rem;
+      text-align: left;
+      box-shadow: 0 0 60px rgba(208, 32, 32, 0.25);
+    }
+
+    .warning-title {
+      font-family: 'Special Elite', cursive;
+      font-size: 2rem;
+      letter-spacing: 0.3em;
+      color: var(--blood);
+      margin-bottom: 1.75rem;
+      text-shadow: 0 0 15px var(--blood-glow);
+    }
+
+    .warning-text {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 2.5rem;
+    }
+
+    .warning-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .warning-btn {
+      padding: 1.2rem 2rem;
+      background: transparent;
+      border: 1px solid var(--blood);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .warning-btn:hover {
+      background: var(--blood);
+      color: #fff;
+    }
+
+    .warning-btn.secondary {
+      border-color: var(--rust);
+      color: var(--text-dim);
+    }
+
+    .warning-btn.secondary:hover {
+      background: var(--rust);
+      color: var(--text);
+    }
+
+    /* Pointer-lock onboarding overlay */
+    .onboarding {
+      position: fixed;
+      bottom: 8vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1002;
+      padding: 1rem 2rem;
+      background: rgba(5, 5, 5, 0.85);
+      border: 1px solid rgba(139, 0, 0, 0.5);
+      border-left: 3px solid var(--blood);
+      color: var(--text);
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    .onboarding.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    .onboarding .key {
+      color: var(--blood);
+      text-shadow: 0 0 8px var(--blood-glow);
+    }
+
+    /* Mobile fallback */
+    .mobile-fallback {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #1a0505 0%, #000 80%);
+      z-index: 1500;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .mobile-fallback .mobile-title {
+      font-family: 'Special Elite', cursive;
+      font-size: clamp(2.5rem, 15vw, 4rem);
+      letter-spacing: 0.15em;
+      color: var(--text);
+      text-shadow: 0 0 30px var(--blood-glow);
+      margin-bottom: 1.5rem;
+    }
+
+    .mobile-fallback .mobile-sub {
+      font-size: 0.85rem;
+      letter-spacing: 0.25em;
+      color: var(--blood);
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+      text-shadow: 0 0 15px var(--blood-glow);
+    }
+
+    .mobile-fallback .mobile-text {
+      max-width: 360px;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+      padding: 1.5rem 1.5rem;
+      border: 1px solid rgba(139, 0, 0, 0.4);
+      border-left: 3px solid var(--blood);
+      background: rgba(5, 5, 5, 0.85);
+    }
+
+    /* Audio toggle button in header */
+    .audio-toggle {
+      background: transparent;
+      border: 1px solid var(--rust);
+      color: var(--text-dim);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      cursor: crosshair;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+
+    .audio-toggle:hover {
+      color: var(--text);
+      border-color: var(--blood);
+      box-shadow: 0 0 10px var(--blood-glow);
+    }
+
+    .audio-toggle.muted {
+      color: rgba(100, 100, 100, 0.5);
+      border-color: rgba(60, 60, 60, 0.5);
+    }
+
+    /* Reduced motion: disable strobing / rapid movement */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-title::before,
+      .hero-title::after {
+        animation: none !important;
+        display: none !important;
+      }
+      .scroll-hint {
+        animation: none !important;
+        opacity: 0.7;
+      }
+      .terminal .cursor {
+        animation: none !important;
+      }
+      .card,
+      .cta-btn,
+      .cta-btn::before,
+      nav a {
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 <body>
+  <!-- Photosensitivity warning splash (shown first, dismissible) -->
+  <div class="warning-splash" id="warning-splash">
+    <div class="warning-box">
+      <div class="warning-title">⚠ WARNING</div>
+      <p class="warning-text">
+        This site contains flashing lights, strobing effects, sudden blackouts,
+        and chromatic distortion. These may trigger seizures in individuals with
+        photosensitive epilepsy or cause discomfort for those with vestibular
+        sensitivities. Viewer discretion advised.
+      </p>
+      <div class="warning-actions">
+        <button class="warning-btn" id="warning-continue">[ Continue ]</button>
+        <button class="warning-btn secondary" id="warning-reduced">[ Enable Reduced Motion ]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile fallback (shown instead of 3D on touch / small screens) -->
+  <div class="mobile-fallback" id="mobile-fallback">
+    <div class="mobile-title">DESCENT</div>
+    <div class="mobile-sub">Something is following you</div>
+    <div class="mobile-text">
+      This experience requires a desktop browser with a keyboard and mouse.
+      Visit on a larger screen to descend.
+    </div>
+  </div>
+
+  <!-- Pointer-lock onboarding hint -->
+  <div class="onboarding" id="onboarding">
+    <span class="key">WASD</span> move &nbsp;·&nbsp;
+    <span class="key">SHIFT</span> sprint &nbsp;·&nbsp;
+    <span class="key">M</span> mute &nbsp;·&nbsp;
+    <span class="key">ESC</span> exit
+  </div>
+
   <div id="tunnel-container"></div>
 
   <div class="crosshair" id="crosshair">+</div>
@@ -434,6 +670,7 @@
       <a href="#chamber-1">Story</a>
       <a href="#chamber-2">Depths</a>
       <a href="#chamber-3">Survive</a>
+      <button class="audio-toggle" id="audio-toggle" aria-label="Toggle ambient sound" title="Toggle sound">♪</button>
     </nav>
   </header>
 
@@ -537,6 +774,14 @@
       BlendFunction
     } from 'postprocessing';
 
+    // Feature flags
+    const isMobile =
+      window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+      window.innerWidth < 900;
+
+    let reducedMotion =
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     let scene, camera, renderer;
     let composer, bloomEffect, chromaticAberrationEffect, noiseEffect;
     let tunnelGroup;
@@ -560,11 +805,482 @@
     const direction = new THREE.Vector3();
     let prevTime = performance.now();
 
-    let dustParticles;
     let fogLayers;
 
     let creature;
     let creatureVisible = false;
+    let creatureChasing = false;
+    let creatureLastTime = 0;
+    let creatureSpawnTimer = null;
+    const CREATURE_SPAWN_DELAY_MS = 60000; // 1 minute of exploration
+    const CREATURE_CHASE_SPEED = 2.0;      // slow, menacing
+    const CREATURE_TOUCH_DISTANCE = 1.5;
+
+    // Cached wall canvas — creating 6 separate 512x512 canvases was wasteful
+    let cachedWallCanvas = null;
+
+    // ─────────── Ambient audio (procedural, no external files) ───────────
+    // Low sub-drone + slow-beating harmonics + band-passed pink noise (wind)
+    // + random distant creaks. Built with Web Audio, started on user gesture.
+    let audioCtx = null;
+    let masterGain = null;
+    let audioMuted = false;
+    const AUDIO_MASTER_VOLUME = 0.55;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) {
+        return; // audio unsupported, fail silently
+      }
+
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0;
+      masterGain.connect(audioCtx.destination);
+
+      // Fade in over 3s so it doesn't startle
+      masterGain.gain.linearRampToValueAtTime(
+        AUDIO_MASTER_VOLUME,
+        audioCtx.currentTime + 3
+      );
+
+      buildDrone();
+      buildWindNoise();
+      scheduleCreaks();
+    }
+
+    function buildDrone() {
+      const ctx = audioCtx;
+      // Two slightly detuned sub-oscillators create a slow beating "breathing"
+      const subA = ctx.createOscillator();
+      subA.type = 'sine';
+      subA.frequency.value = 42;
+      const subB = ctx.createOscillator();
+      subB.type = 'sine';
+      subB.frequency.value = 42.4;
+
+      const subGain = ctx.createGain();
+      subGain.gain.value = 0.18;
+      subA.connect(subGain);
+      subB.connect(subGain);
+      subGain.connect(masterGain);
+
+      // Mid-range drone for body
+      const mid = ctx.createOscillator();
+      mid.type = 'sine';
+      mid.frequency.value = 110;
+      const midGain = ctx.createGain();
+      midGain.gain.value = 0.04;
+      mid.connect(midGain);
+      midGain.connect(masterGain);
+
+      // Slow LFO modulating the mid gain — feels like the space breathing
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 0.08;
+      const lfoAmp = ctx.createGain();
+      lfoAmp.gain.value = 0.06;
+      lfo.connect(lfoAmp);
+      lfoAmp.connect(midGain.gain);
+
+      subA.start();
+      subB.start();
+      mid.start();
+      lfo.start();
+    }
+
+    function buildWindNoise() {
+      const ctx = audioCtx;
+      const bufferSize = ctx.sampleRate * 4;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // Pink noise via Voss-McCartney approximation (softer than white noise)
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+        b6 = white * 0.115926;
+      }
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+
+      // Static low-frequency rumble — NOT a bandpass sweep (which produced the
+      // ocean-waves character). Keeping everything below ~160Hz makes it feel
+      // like cavernous air pressure / distant machinery instead of surf.
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 160;
+      filter.Q.value = 0.4;
+
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.value = 0.06;
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(masterGain);
+
+      noise.start();
+    }
+
+    // ─────────── Chase audio (starts when creature spawns) ───────────
+    let chaseAudioNodes = null;
+
+    function startChaseAudio() {
+      if (!audioCtx || !masterGain || chaseAudioNodes) return;
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+
+      // Dedicated gain bus so the whole chase layer fades in/out cleanly
+      const chaseGain = ctx.createGain();
+      chaseGain.gain.value = 0;
+      chaseGain.connect(masterGain);
+      chaseGain.gain.linearRampToValueAtTime(0.85, now + 1.5);
+
+      // 1) Heartbeat — 110 BPM low thump
+      const heartOsc = ctx.createOscillator();
+      heartOsc.type = 'sine';
+      heartOsc.frequency.value = 55;
+      const heartGain = ctx.createGain();
+      heartGain.gain.value = 0;
+      heartOsc.connect(heartGain);
+      heartGain.connect(chaseGain);
+      heartOsc.start();
+
+      const beatInterval = 60 / 110;
+      let nextBeat = now + 0.25;
+      const heartInterval = setInterval(() => {
+        if (!audioCtx) return;
+        const t = audioCtx.currentTime;
+        // Schedule pulses ~2s ahead so there are no gaps
+        while (nextBeat < t + 2) {
+          heartGain.gain.setValueAtTime(0, nextBeat);
+          heartGain.gain.linearRampToValueAtTime(0.75, nextBeat + 0.025);
+          heartGain.gain.exponentialRampToValueAtTime(0.001, nextBeat + 0.22);
+          nextBeat += beatInterval;
+        }
+      }, 400);
+
+      // 2) Dissonant drone — tritone interval (E + A#) = maximum unease
+      const drone1 = ctx.createOscillator();
+      drone1.type = 'sawtooth';
+      drone1.frequency.value = 164.8;
+      const drone2 = ctx.createOscillator();
+      drone2.type = 'sawtooth';
+      drone2.frequency.value = 233.1;
+
+      const droneFilter = ctx.createBiquadFilter();
+      droneFilter.type = 'lowpass';
+      droneFilter.frequency.value = 650;
+      droneFilter.Q.value = 2.5;
+
+      const droneGain = ctx.createGain();
+      droneGain.gain.value = 0.055;
+
+      drone1.connect(droneFilter);
+      drone2.connect(droneFilter);
+      droneFilter.connect(droneGain);
+      droneGain.connect(chaseGain);
+
+      // Slow filter LFO makes the drone feel like it's pulsing toward you
+      const droneLfo = ctx.createOscillator();
+      droneLfo.type = 'sine';
+      droneLfo.frequency.value = 0.18;
+      const droneLfoAmp = ctx.createGain();
+      droneLfoAmp.gain.value = 260;
+      droneLfo.connect(droneLfoAmp);
+      droneLfoAmp.connect(droneFilter.frequency);
+
+      drone1.start();
+      drone2.start();
+      droneLfo.start();
+
+      // 3) High-passed breath / scrape — white noise modulated by slow LFO
+      const bufSize = ctx.sampleRate * 2;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const bufData = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) bufData[i] = Math.random() * 2 - 1;
+
+      const breath = ctx.createBufferSource();
+      breath.buffer = buf;
+      breath.loop = true;
+
+      const breathFilter = ctx.createBiquadFilter();
+      breathFilter.type = 'highpass';
+      breathFilter.frequency.value = 1800;
+      breathFilter.Q.value = 0.8;
+
+      const breathGain = ctx.createGain();
+      breathGain.gain.value = 0.015;
+      breath.connect(breathFilter);
+      breathFilter.connect(breathGain);
+      breathGain.connect(chaseGain);
+
+      // Breath amplitude LFO — in/out pattern, ~18 breaths per minute
+      const breathLfo = ctx.createOscillator();
+      breathLfo.type = 'sine';
+      breathLfo.frequency.value = 0.3;
+      const breathLfoAmp = ctx.createGain();
+      breathLfoAmp.gain.value = 0.045;
+      breathLfo.connect(breathLfoAmp);
+      breathLfoAmp.connect(breathGain.gain);
+      breathLfo.start();
+
+      breath.start();
+
+      chaseAudioNodes = {
+        chaseGain,
+        oscillators: [heartOsc, drone1, drone2, droneLfo, breathLfo],
+        sources: [breath],
+        heartInterval
+      };
+    }
+
+    // ─────────── Monster appearance sting (one-shot) ───────────
+    // Three-layer non-growl monster vocalization:
+    //   1) Sub-impact thump  — grounds the sting, gives it physical weight
+    //   2) Sharp inhale gasp — bandpass-swept noise, ~0.5s
+    //   3) Descending wail   — sawtooth with amplitude-modulation warble
+    //                          for an alien/metallic voice character
+    function playMonsterAppear() {
+      if (!audioCtx || !masterGain || audioMuted) return;
+      const ctx = audioCtx;
+      const now = ctx.currentTime;
+      const duration = 2.6;
+
+      // Master sting envelope — sharp attack, long exponential tail
+      const stingGain = ctx.createGain();
+      stingGain.gain.setValueAtTime(0, now);
+      stingGain.gain.linearRampToValueAtTime(0.6, now + 0.05);
+      stingGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      stingGain.connect(masterGain);
+
+      // 1) Sub-impact thump
+      const sub = ctx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(85, now);
+      sub.frequency.exponentialRampToValueAtTime(34, now + 0.3);
+      const subGain = ctx.createGain();
+      subGain.gain.setValueAtTime(0, now);
+      subGain.gain.linearRampToValueAtTime(0.42, now + 0.02);
+      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+      sub.connect(subGain);
+      subGain.connect(stingGain);
+      sub.start(now);
+      sub.stop(now + 0.6);
+
+      // 2) Sharp inhale gasp — noise through a bandpass that sweeps upward
+      const bufSize = ctx.sampleRate * 0.6;
+      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+      const bufData = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) bufData[i] = Math.random() * 2 - 1;
+      const gasp = ctx.createBufferSource();
+      gasp.buffer = buf;
+
+      const gaspFilter = ctx.createBiquadFilter();
+      gaspFilter.type = 'bandpass';
+      gaspFilter.Q.value = 4.5;
+      gaspFilter.frequency.setValueAtTime(750, now);
+      gaspFilter.frequency.exponentialRampToValueAtTime(2400, now + 0.42);
+
+      const gaspGain = ctx.createGain();
+      gaspGain.gain.setValueAtTime(0, now);
+      gaspGain.gain.linearRampToValueAtTime(0.28, now + 0.05);
+      gaspGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+
+      gasp.connect(gaspFilter);
+      gaspFilter.connect(gaspGain);
+      gaspGain.connect(stingGain);
+      gasp.start(now);
+
+      // 3) Descending wail with AM warble (no growling — vocal-like timbre)
+      const wail = ctx.createOscillator();
+      wail.type = 'sawtooth';
+      wail.frequency.setValueAtTime(880, now);
+      wail.frequency.exponentialRampToValueAtTime(120, now + duration * 0.85);
+
+      // Amplitude modulation gives an "inhuman voice" warble.
+      // amGain.gain ranges 0..1 driven by modulator at ~47Hz.
+      const amGain = ctx.createGain();
+      amGain.gain.value = 0.5;
+
+      const modulator = ctx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(47, now);
+      // Modulator slows down with the wail for a "stretching" effect
+      modulator.frequency.exponentialRampToValueAtTime(22, now + duration);
+      const modulatorGain = ctx.createGain();
+      modulatorGain.gain.value = 0.5;
+      modulator.connect(modulatorGain);
+      modulatorGain.connect(amGain.gain);
+
+      const wailHpf = ctx.createBiquadFilter();
+      wailHpf.type = 'highpass';
+      wailHpf.frequency.value = 110; // strip the sub-rumble — sub layer covers that
+
+      const wailGain = ctx.createGain();
+      wailGain.gain.setValueAtTime(0, now);
+      wailGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
+      wailGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      wail.connect(amGain);
+      amGain.connect(wailHpf);
+      wailHpf.connect(wailGain);
+      wailGain.connect(stingGain);
+
+      wail.start(now);
+      wail.stop(now + duration + 0.05);
+      modulator.start(now);
+      modulator.stop(now + duration + 0.05);
+
+      // Cleanup — disconnect after the sting fully decays
+      setTimeout(() => {
+        try { stingGain.disconnect(); } catch (e) {}
+      }, (duration + 0.5) * 1000);
+    }
+
+    function stopChaseAudio() {
+      if (!chaseAudioNodes || !audioCtx) return;
+      const { chaseGain, oscillators, sources, heartInterval } = chaseAudioNodes;
+      chaseAudioNodes = null;
+
+      clearInterval(heartInterval);
+
+      const now = audioCtx.currentTime;
+      chaseGain.gain.cancelScheduledValues(now);
+      chaseGain.gain.setValueAtTime(chaseGain.gain.value, now);
+      chaseGain.gain.linearRampToValueAtTime(0, now + 0.6);
+
+      // Stop everything after the fade completes
+      setTimeout(() => {
+        oscillators.forEach(o => { try { o.stop(); } catch (e) {} });
+        sources.forEach(s => { try { s.stop(); } catch (e) {} });
+        try { chaseGain.disconnect(); } catch (e) {}
+      }, 700);
+    }
+
+    function scheduleCreaks() {
+      function playCreak() {
+        if (!audioCtx) return;
+        if (!audioMuted) {
+          const ctx = audioCtx;
+          const now = ctx.currentTime;
+          const duration = 1.4 + Math.random() * 2.2;
+
+          // Sawtooth with downward pitch bend = groan/creak character
+          const osc = ctx.createOscillator();
+          osc.type = 'sawtooth';
+          const startFreq = 75 + Math.random() * 55;
+          osc.frequency.setValueAtTime(startFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(
+            startFreq * 0.5,
+            now + duration
+          );
+
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.value = 260;
+          filter.Q.value = 4;
+
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.13, now + 0.35);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+          osc.connect(filter);
+          filter.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + duration + 0.05);
+        }
+        // Schedule next creak 8-26s later
+        setTimeout(playCreak, 8000 + Math.random() * 18000);
+      }
+      setTimeout(playCreak, 6000 + Math.random() * 8000);
+    }
+
+    function setAudioMuted(muted) {
+      if (!audioCtx || !masterGain) return;
+      audioMuted = muted;
+      const now = audioCtx.currentTime;
+      masterGain.gain.cancelScheduledValues(now);
+      masterGain.gain.linearRampToValueAtTime(
+        muted ? 0 : AUDIO_MASTER_VOLUME,
+        now + 0.35
+      );
+      const btn = document.getElementById('audio-toggle');
+      if (btn) btn.classList.toggle('muted', muted);
+    }
+
+    function setupAudioToggle() {
+      const btn = document.getElementById('audio-toggle');
+      if (!btn) return;
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // First click may happen before initAudio — covers that edge case
+        if (!audioCtx) initAudio();
+        // Resume if suspended by autoplay policy
+        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        setAudioMuted(!audioMuted);
+      });
+    }
+
+    function bootstrap() {
+      // Mobile: skip Three.js entirely, show fallback screen
+      if (isMobile) {
+        document.getElementById('mobile-fallback').style.display = 'flex';
+        document.getElementById('warning-splash').style.display = 'none';
+        return;
+      }
+
+      // Show photosensitivity warning first, wait for user choice
+      const splash = document.getElementById('warning-splash');
+      const previouslyAccepted = localStorage.getItem('descent-warning-accepted');
+
+      // Returning visitors skip the warning, but audio still needs a gesture —
+      // hook a one-shot listener so their first click/key starts the soundscape
+      const startAudioOnFirstGesture = () => {
+        initAudio();
+        document.removeEventListener('pointerdown', startAudioOnFirstGesture);
+        document.removeEventListener('keydown', startAudioOnFirstGesture);
+      };
+
+      if (previouslyAccepted === 'reduced') {
+        reducedMotion = true;
+        splash.style.display = 'none';
+        document.addEventListener('pointerdown', startAudioOnFirstGesture, { once: true });
+        document.addEventListener('keydown', startAudioOnFirstGesture, { once: true });
+        init();
+      } else if (previouslyAccepted === 'full') {
+        splash.style.display = 'none';
+        document.addEventListener('pointerdown', startAudioOnFirstGesture, { once: true });
+        document.addEventListener('keydown', startAudioOnFirstGesture, { once: true });
+        init();
+      } else {
+        document.getElementById('warning-continue').addEventListener('click', () => {
+          localStorage.setItem('descent-warning-accepted', 'full');
+          splash.style.display = 'none';
+          initAudio(); // click IS the user gesture — good time to start audio
+          init();
+        });
+        document.getElementById('warning-reduced').addEventListener('click', () => {
+          localStorage.setItem('descent-warning-accepted', 'reduced');
+          reducedMotion = true;
+          splash.style.display = 'none';
+          initAudio();
+          init();
+        });
+      }
+    }
 
     function init() {
       scene = new THREE.Scene();
@@ -585,9 +1301,11 @@
       createLights();
       createFlashlight();
       createFogLayers();
+      createCreature();
       setupPostProcessing();
       setupMouseTracking();
       initExplorationControls();
+      setupAudioToggle();
 
       window.addEventListener('resize', onWindowResize);
       setupScrollDetection();
@@ -597,33 +1315,36 @@
     }
 
     function createWallTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
+      if (!cachedWallCanvas) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = '#1a1512';
-      ctx.fillRect(0, 0, 512, 512);
+        ctx.fillStyle = '#1a1512';
+        ctx.fillRect(0, 0, 512, 512);
 
-      for (let i = 0; i < 3000; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 512;
-        const brightness = 20 + Math.random() * 40;
-        ctx.fillStyle = `rgba(${brightness}, ${brightness * 0.8}, ${brightness * 0.7}, 0.4)`;
-        ctx.fillRect(x, y, Math.random() * 4 + 1, Math.random() * 4 + 1);
+        for (let i = 0; i < 3000; i++) {
+          const x = Math.random() * 512;
+          const y = Math.random() * 512;
+          const brightness = 20 + Math.random() * 40;
+          ctx.fillStyle = `rgba(${brightness}, ${brightness * 0.8}, ${brightness * 0.7}, 0.4)`;
+          ctx.fillRect(x, y, Math.random() * 4 + 1, Math.random() * 4 + 1);
+        }
+
+        for (let i = 0; i < 15; i++) {
+          const x = Math.random() * 512;
+          ctx.strokeStyle = `rgba(80, 30, 20, ${Math.random() * 0.4})`;
+          ctx.lineWidth = Math.random() * 8 + 2;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + (Math.random() - 0.5) * 60, 512);
+          ctx.stroke();
+        }
+        cachedWallCanvas = canvas;
       }
 
-      for (let i = 0; i < 15; i++) {
-        const x = Math.random() * 512;
-        ctx.strokeStyle = `rgba(80, 30, 20, ${Math.random() * 0.4})`;
-        ctx.lineWidth = Math.random() * 8 + 2;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x + (Math.random() - 0.5) * 60, 512);
-        ctx.stroke();
-      }
-
-      const texture = new THREE.CanvasTexture(canvas);
+      const texture = new THREE.CanvasTexture(cachedWallCanvas);
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
       return texture;
@@ -1174,45 +1895,6 @@
       scene.add(flashlight.target);
     }
 
-    function createDustParticles() {
-      const particleCount = 1500;
-      const geometry = new THREE.PlaneGeometry(0.03, 0.03);
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xffeedd,
-        transparent: true,
-        opacity: 0.25,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
-
-      dustParticles = new THREE.InstancedMesh(geometry, material, particleCount);
-
-      const dummy = new THREE.Object3D();
-      const positions = [];
-
-      for (let i = 0; i < particleCount; i++) {
-        const x = (Math.random() - 0.5) * 5;
-        const y = (Math.random() - 0.5) * 6;
-        const z = Math.random() * -100 + 10;
-
-        positions.push({
-          x, y, z,
-          speedX: (Math.random() - 0.5) * 0.002,
-          speedY: (Math.random() - 0.5) * 0.001,
-          phase: Math.random() * Math.PI * 2
-        });
-
-        dummy.position.set(x, y, z);
-        dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-        dummy.updateMatrix();
-        dustParticles.setMatrixAt(i, dummy.matrix);
-      }
-
-      dustParticles.instanceMatrix.needsUpdate = true;
-      dustParticles.userData.positions = positions;
-      scene.add(dustParticles);
-    }
-
     function createFogLayers() {
       fogLayers = new THREE.Group();
 
@@ -1237,99 +1919,176 @@
       scene.add(fogLayers);
     }
 
-    function updateDust(time) {
-      const dummy = new THREE.Object3D();
-      const positions = dustParticles.userData.positions;
-
-      for (let i = 0; i < positions.length; i++) {
-        const p = positions[i];
-
-        p.x += Math.sin(time * 0.5 + p.phase) * 0.0005 + p.speedX;
-        p.y += Math.sin(time * 0.3 + p.phase * 0.5) * 0.0003 + p.speedY;
-        p.z += 0.003;
-
-        if (p.z > camera.position.z + 8) {
-          p.z = camera.position.z - 60;
-          p.x = (Math.random() - 0.5) * 5;
-          p.y = (Math.random() - 0.5) * 6;
-        }
-
-        dummy.position.set(p.x, p.y, p.z);
-        dummy.rotation.z = time * 0.1 + i * 0.01;
-        dummy.updateMatrix();
-        dustParticles.setMatrixAt(i, dummy.matrix);
-      }
-
-      dustParticles.instanceMatrix.needsUpdate = true;
-    }
-
     function createCreature() {
       creature = new THREE.Group();
 
+      // Dark red-tint + fog:false so silhouette stays visible at any fog distance.
+      // MeshBasicMaterial ignores lighting → solid silhouette look.
       const bodyMat = new THREE.MeshBasicMaterial({
-        color: 0x000000,
-        transparent: true,
-        opacity: 0.95
+        color: 0x1a0505,
+        fog: false
       });
 
+      // Torso: center at y=1.0, spans y=0 to y=2.0
+      const torsoW = 1.1, torsoH = 2.0, torsoD = 0.35;
       const torso = new THREE.Mesh(
-        new THREE.BoxGeometry(0.7, 1.6, 0.25),
+        new THREE.BoxGeometry(torsoW, torsoH, torsoD),
         bodyMat
       );
-      torso.position.y = 0.8;
+      torso.position.y = torsoH / 2;
       creature.add(torso);
 
+      // Head sits on top of torso
       const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 8, 8),
+        new THREE.SphereGeometry(0.42, 12, 12),
         bodyMat
       );
-      head.position.y = 1.9;
+      head.position.y = torsoH + 0.35;
       creature.add(head);
 
-      const armGeo = new THREE.BoxGeometry(0.12, 1.4, 0.08);
-      const leftArm = new THREE.Mesh(armGeo, bodyMat);
-      leftArm.position.set(-0.5, 0.5, 0);
-      leftArm.rotation.z = 0.25;
-      creature.add(leftArm);
+      // Neck (thin connector)
+      const neck = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.25, 0.22),
+        bodyMat
+      );
+      neck.position.y = torsoH + 0.05;
+      creature.add(neck);
 
-      const rightArm = leftArm.clone();
-      rightArm.position.x = 0.5;
-      rightArm.rotation.z = -0.25;
-      creature.add(rightArm);
+      // Arms — pivoted at the shoulder so they hang naturally and touch the torso
+      const armLen = 1.85;
+      const shoulderY = torsoH - 0.15;   // just below top of torso
+      const shoulderX = torsoW / 2 - 0.02; // flush with torso side
 
-      const legGeo = new THREE.BoxGeometry(0.15, 1.2, 0.1);
-      const leftLeg = new THREE.Mesh(legGeo, bodyMat);
-      leftLeg.position.set(-0.2, -0.6, 0);
-      creature.add(leftLeg);
+      function makeArm(side) {
+        const shoulder = new THREE.Group();
+        shoulder.position.set(side * shoulderX, shoulderY, 0);
+        // Slight inward lean at the wrist (menacing reach pose)
+        shoulder.rotation.z = side * 0.18;
 
-      const rightLeg = leftLeg.clone();
-      rightLeg.position.x = 0.2;
-      creature.add(rightLeg);
+        const upper = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, armLen, 0.14),
+          bodyMat
+        );
+        upper.position.y = -armLen / 2; // hang DOWN from shoulder pivot
+        shoulder.add(upper);
 
+        // Small shoulder cap sphere so the corner looks connected, not boxy
+        const cap = new THREE.Mesh(
+          new THREE.SphereGeometry(0.14, 10, 10),
+          bodyMat
+        );
+        shoulder.add(cap);
+
+        return shoulder;
+      }
+
+      creature.add(makeArm(-1)); // left
+      creature.add(makeArm(1));  // right
+
+      // Legs — same pivot trick at the hips
+      const legLen = 1.4;
+      const hipY = 0.05;
+      const hipX = 0.22;
+
+      function makeLeg(side) {
+        const hip = new THREE.Group();
+        hip.position.set(side * hipX, hipY, 0);
+
+        const leg = new THREE.Mesh(
+          new THREE.BoxGeometry(0.22, legLen, 0.16),
+          bodyMat
+        );
+        leg.position.y = -legLen / 2;
+        hip.add(leg);
+
+        return hip;
+      }
+
+      creature.add(makeLeg(-1));
+      creature.add(makeLeg(1));
+
+      // Ground the creature: legs extend down to y=-1.35 relative, floor is at y=-2
       creature.visible = false;
-      creature.position.set(0, -1, -45);
+      creature.position.set(0, -0.65, -45);
       scene.add(creature);
     }
 
-    function showCreature(z = -40, duration = 3000) {
-      creature.position.z = z;
-      creature.position.x = (Math.random() - 0.5) * 2;
+    function spawnCreatureChase() {
+      // Spawn 8 units behind the player based on their ACTUAL facing direction,
+      // not a fixed z-offset — otherwise turning around puts spawn in front of you.
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      if (forward.lengthSq() < 0.001) forward.set(0, 0, -1);
+      forward.normalize();
+
+      const spawnDistance = 8;
+      let spawnX = camera.position.x - forward.x * spawnDistance;
+      let spawnZ = camera.position.z - forward.z * spawnDistance;
+
+      // Keep spawn inside the tunnel interior (not outside walls or past ends)
+      spawnX = THREE.MathUtils.clamp(spawnX, -1.8, 1.8);
+      spawnZ = THREE.MathUtils.clamp(spawnZ, -57, 5);
+
+      // If clamping pulled the spawn point too close to the player (e.g. they're
+      // facing a side wall or standing at a tunnel end), fall back to the far end
+      // of the tunnel so there's always meaningful chase distance.
+      const dx = camera.position.x - spawnX;
+      const dz = camera.position.z - spawnZ;
+      if (Math.hypot(dx, dz) < 4) {
+        spawnZ = (camera.position.z > -26) ? -57 : 5;
+        spawnX = (Math.random() - 0.5) * 1.5;
+      }
+
+      creature.position.set(spawnX, -0.65, spawnZ);
       creature.visible = true;
       creatureVisible = true;
+      creatureChasing = true;
+      creatureLastTime = 0;
+      playMonsterAppear();
+      startChaseAudio();
+    }
 
-      setTimeout(() => {
-        creature.visible = false;
-        creatureVisible = false;
-      }, duration);
+    function stopCreatureChase() {
+      creature.visible = false;
+      creatureVisible = false;
+      creatureChasing = false;
+      stopChaseAudio();
     }
 
     function updateCreature(time) {
       if (!creatureVisible) return;
 
-      creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
+      if (creatureChasing) {
+        const delta = creatureLastTime ? Math.min(time - creatureLastTime, 0.1) : 0;
+        creatureLastTime = time;
 
-      creature.rotation.z = Math.sin(time * 2) * 0.08;
-      creature.position.y = -1 + Math.sin(time * 1.5) * 0.05;
+        const dx = camera.position.x - creature.position.x;
+        const dz = camera.position.z - creature.position.z;
+        const dist = Math.hypot(dx, dz);
+
+        // Touch → force exit back to initial state (view mode)
+        if (dist < CREATURE_TOUCH_DISTANCE) {
+          if (controls && controls.isLocked) controls.unlock();
+          return;
+        }
+
+        // Slow, persistent advance toward the player
+        creature.position.x += (dx / dist) * CREATURE_CHASE_SPEED * delta;
+        creature.position.z += (dz / dist) * CREATURE_CHASE_SPEED * delta;
+
+        // Keep within tunnel bounds
+        creature.position.x = THREE.MathUtils.clamp(creature.position.x, -1.8, 1.8);
+        creature.position.z = THREE.MathUtils.clamp(creature.position.z, -58, 6);
+
+        // Face the player, gentle bob around grounded base y=-0.65
+        creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
+        creature.position.y = -0.65 + Math.sin(time * 2) * 0.05;
+      } else {
+        creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
+        creature.rotation.z = Math.sin(time * 2) * 0.08;
+        creature.position.y = -0.65 + Math.sin(time * 1.5) * 0.04;
+      }
     }
 
     function setupMouseTracking() {
@@ -1386,6 +2145,7 @@
     }
 
     function updateLightFlicker(time) {
+      if (reducedMotion) return;
       tunnelLights.forEach((lightData) => {
         const { light, baseIntensity, flickerPhase } = lightData;
 
@@ -1399,6 +2159,7 @@
     }
 
     function triggerMassFlicker(duration = 2000) {
+      if (reducedMotion) return;
       const startTime = performance.now();
 
       function flicker() {
@@ -1408,11 +2169,12 @@
           return;
         }
 
+        // Keep interval >= 333ms (3Hz max) to stay under WCAG 2.3.1 threshold
         tunnelLights.forEach(l => {
-          l.light.intensity = Math.random() > 0.5 ? l.baseIntensity * 0.1 : l.baseIntensity * 1.5;
+          l.light.intensity = Math.random() > 0.5 ? l.baseIntensity * 0.3 : l.baseIntensity * 1.3;
         });
 
-        setTimeout(flicker, 50 + Math.random() * 100);
+        setTimeout(flicker, 340 + Math.random() * 120);
       }
 
       flicker();
@@ -1422,6 +2184,13 @@
       controls = new PointerLockControls(camera, document.body);
 
       document.addEventListener('keydown', (e) => {
+        // M works globally (not just during exploration) — no text inputs on the page
+        if (e.code === 'KeyM') {
+          if (!audioCtx) initAudio();
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          setAudioMuted(!audioMuted);
+          return;
+        }
         if (!isExploring) return;
         switch(e.code) {
           case 'KeyW': moveState.forward = true; break;
@@ -1450,6 +2219,17 @@
         document.querySelector('header').style.display = 'none';
         document.querySelector('.depth-indicator').style.display = 'none';
         document.getElementById('crosshair').style.display = 'block';
+
+        // Show onboarding hint, auto-fade after 3s
+        const onboarding = document.getElementById('onboarding');
+        onboarding.classList.add('visible');
+        setTimeout(() => onboarding.classList.remove('visible'), 3500);
+
+        // Start 1-minute spawn timer for the chase
+        if (creatureSpawnTimer) clearTimeout(creatureSpawnTimer);
+        creatureSpawnTimer = setTimeout(() => {
+          if (isExploring) spawnCreatureChase();
+        }, CREATURE_SPAWN_DELAY_MS);
       });
 
       controls.addEventListener('unlock', () => {
@@ -1458,6 +2238,14 @@
         document.querySelector('header').style.display = 'flex';
         document.querySelector('.depth-indicator').style.display = 'flex';
         document.getElementById('crosshair').style.display = 'none';
+        document.getElementById('onboarding').classList.remove('visible');
+
+        // Cancel pending spawn and destroy any active creature
+        if (creatureSpawnTimer) {
+          clearTimeout(creatureSpawnTimer);
+          creatureSpawnTimer = null;
+        }
+        stopCreatureChase();
       });
 
       document.querySelector('.cta-btn').addEventListener('click', () => {
@@ -1509,15 +2297,21 @@
         mipmapBlur: true
       });
 
+      const vignetteEffect = new VignetteEffect({
+        darkness: 0.6,
+        offset: 0.3
+      });
+
+      if (reducedMotion) {
+        // Skip chromatic aberration and noise — strobe risk + visual churn
+        composer.addPass(new EffectPass(camera, bloomEffect, vignetteEffect));
+        return;
+      }
+
       chromaticAberrationEffect = new ChromaticAberrationEffect({
         offset: new THREE.Vector2(0.002, 0.002),
         radialModulation: true,
         modulationOffset: 0.15
-      });
-
-      const vignetteEffect = new VignetteEffect({
-        darkness: 0.6,
-        offset: 0.3
       });
 
       noiseEffect = new NoiseEffect({
@@ -1535,6 +2329,7 @@
     }
 
     function triggerDistortion(intensity = 0.01, duration = 500) {
+      if (reducedMotion || !chromaticAberrationEffect) return;
       const originalOffset = 0.002;
       chromaticAberrationEffect.offset.set(intensity, intensity);
 
@@ -1611,15 +2406,17 @@
 
           scene.fog.density = 0.045 + progress * 0.025;
 
-          const aberration = 0.002 + progress * 0.004;
-          chromaticAberrationEffect.offset.set(aberration, aberration);
-
-          noiseEffect.blendMode.opacity.value = 0.12 + progress * 0.12;
+          if (!reducedMotion && chromaticAberrationEffect && noiseEffect) {
+            const aberration = 0.002 + progress * 0.004;
+            chromaticAberrationEffect.offset.set(aberration, aberration);
+            noiseEffect.blendMode.opacity.value = 0.12 + progress * 0.12;
+          }
         }
       });
     }
 
     function triggerBlackout(duration = 500) {
+      if (reducedMotion) return;
       const originalIntensities = tunnelLights.map(l => l.light.intensity);
       tunnelLights.forEach(l => l.light.intensity = 0);
       flashlight.intensity = 0;
@@ -1650,11 +2447,12 @@
 
       updateFlashlight();
       updateLightFlicker(time);
+      updateCreature(time);
 
       composer.render();
     }
 
-    init();
+    bootstrap();
   </script>
 </body>
 </html>

@@ -1,0 +1,10 @@
+# Local-only test artifacts (any file prefixed with _ is dev-only)
+_test.py
+_test_*.py
+_splash.png
+_loaded.png
+_warning_after.png
+
+# Editor/OS
+.DS_Store
+Thumbs.db

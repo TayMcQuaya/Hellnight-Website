@@ -36,6 +36,16 @@
       cursor: crosshair;
     }
 
+    /* While the photosensitivity warning is visible, the page must NOT be
+       scrollable — otherwise users can scroll past the warning without
+       acknowledging it. Locks BOTH html and body. */
+    html.warning-active,
+    html.warning-active body {
+      overflow: hidden !important;
+      height: 100vh;
+      max-height: 100vh;
+    }
+
     /* Full screen canvas */
     #tunnel-container {
       position: fixed;
@@ -98,21 +108,24 @@
 
     nav {
       display: flex;
-      gap: 2rem;
+      gap: 2.5rem;
+      align-items: center;
     }
 
     nav a {
-      color: var(--text-dim);
+      color: var(--text);
       text-decoration: none;
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
+      font-size: 1.05rem;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
+      font-weight: bold;
+      text-shadow: 0 0 12px var(--blood-glow), 0 1px 3px rgba(0, 0, 0, 0.9);
       transition: all 0.3s ease;
     }
 
     nav a:hover {
-      color: var(--text);
-      text-shadow: 0 0 10px var(--blood-glow);
+      color: var(--blood);
+      text-shadow: 0 0 18px var(--blood-glow), 0 0 32px var(--blood-glow);
     }
 
     /* Scroll container */
@@ -224,14 +237,18 @@
     }
 
     .scroll-hint {
-      font-size: 0.65rem;
-      letter-spacing: 0.2em;
-      color: var(--text-dim);
+      font-size: 1.1rem;
+      letter-spacing: 0.35em;
+      color: var(--text);
+      font-weight: bold;
+      text-transform: uppercase;
+      text-shadow: 0 0 14px var(--blood-glow), 0 0 28px var(--blood-glow), 0 1px 3px rgba(0, 0, 0, 0.9);
       animation: pulse 2s ease-in-out infinite;
+      margin-top: 0.5rem;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
+      0%, 100% { opacity: 0.7; }
       50% { opacity: 1; }
     }
 
@@ -476,6 +493,9 @@
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.25s ease;
+      pointer-events: auto;
+      position: relative;
+      z-index: 1;
     }
 
     .warning-btn:hover {
@@ -525,6 +545,260 @@
       text-shadow: 0 0 8px var(--blood-glow);
     }
 
+    /* Interaction prompt (E to open door, etc.) */
+    .interaction-prompt {
+      position: fixed;
+      bottom: 15vh;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1003;
+      padding: 0.6rem 1.4rem;
+      background: rgba(5, 5, 5, 0.85);
+      border: 1px solid rgba(208, 32, 32, 0.6);
+      border-left: 3px solid var(--blood);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+      backdrop-filter: blur(6px);
+      text-shadow: 0 0 8px var(--blood-glow);
+    }
+
+    .interaction-prompt.visible {
+      opacity: 1;
+    }
+
+    /* Inventory bar (bottom-right) */
+    .inventory-bar {
+      position: fixed;
+      bottom: 2vh;
+      right: 2vh;
+      z-index: 1003;
+      display: none;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(5, 5, 5, 0.78);
+      border: 1px solid rgba(208, 32, 32, 0.5);
+      border-left: 3px solid var(--blood);
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+
+    .inventory-bar.visible {
+      display: flex;
+    }
+
+    .inv-slot {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 1px solid rgba(212, 197, 176, 0.25);
+      background: rgba(20, 5, 5, 0.6);
+    }
+
+    /* Objectives panel — top-right checklist */
+    .objectives {
+      position: fixed;
+      top: 7vh;
+      right: 2vh;
+      z-index: 1003;
+      display: none;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 0.85rem 1.1rem;
+      background: rgba(5, 5, 5, 0.78);
+      border: 1px solid rgba(208, 32, 32, 0.5);
+      border-left: 3px solid var(--blood);
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+      max-width: 320px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+    }
+    .objectives.visible { display: flex; }
+
+    .obj-title {
+      color: var(--blood);
+      text-shadow: 0 0 8px var(--blood-glow);
+      font-weight: bold;
+      letter-spacing: 0.25em;
+      margin-bottom: 0.25rem;
+    }
+    /* Two-column grid: mark in fixed-width column, text wraps cleanly. */
+    .obj-row {
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 2em 1fr;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+    .obj-row .obj-mark {
+      color: rgba(212, 197, 176, 0.4);
+      white-space: nowrap;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .obj-row.done .obj-mark { color: #66ffaa; }
+    .obj-row.done .obj-text {
+      color: rgba(212, 197, 176, 0.45);
+      text-decoration: line-through;
+    }
+
+    /* Win screen — variant of the warning splash but green-accent */
+    .win-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #001a06 0%, #000 80%);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+    .win-screen.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .win-box {
+      max-width: 640px;
+      width: 100%;
+      border: 1px solid #22ff66;
+      border-left: 4px solid #22ff66;
+      background: rgba(0, 10, 5, 0.95);
+      padding: 4rem 3.5rem;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(34, 255, 102, 0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .win-title {
+      font-family: 'Special Elite', cursive;
+      font-size: 2.4rem;
+      letter-spacing: 0.3em;
+      color: #22ff66;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 20px rgba(34, 255, 102, 0.6);
+    }
+    .win-text {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 2rem;
+    }
+    .win-stat {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      margin-bottom: 0.5rem;
+    }
+    .win-stat strong {
+      color: #66ffaa;
+      font-weight: normal;
+    }
+    .win-btn {
+      margin-top: 2rem;
+      padding: 1.2rem 2rem;
+      background: transparent;
+      border: 1px solid #22ff66;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .win-btn:hover {
+      background: #22ff66;
+      color: #000;
+    }
+
+    /* Lose screen — same layout as win, blood-red accent */
+    .lose-screen {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #1a0303 0%, #000 80%);
+      z-index: 2500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.7s ease;
+    }
+    .lose-screen.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .lose-box {
+      max-width: 580px;
+      width: 100%;
+      border: 1px solid var(--blood);
+      border-left: 4px solid var(--blood);
+      background: rgba(10, 0, 0, 0.95);
+      padding: 4rem 3.5rem;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(208, 32, 32, 0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .lose-title {
+      font-family: 'Special Elite', cursive;
+      font-size: 2.6rem;
+      letter-spacing: 0.3em;
+      color: var(--blood);
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 24px var(--blood-glow);
+    }
+    .lose-text {
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+    .lose-stat {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+      letter-spacing: 0.2em;
+      margin-bottom: 2rem;
+    }
+    .lose-stat strong {
+      color: var(--blood);
+      font-weight: normal;
+    }
+    .lose-btn {
+      margin-top: 1rem;
+      padding: 1.2rem 2rem;
+      background: transparent;
+      border: 1px solid var(--blood);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .lose-btn:hover {
+      background: var(--blood);
+      color: #fff;
+    }
+
     /* Mobile fallback */
     .mobile-fallback {
       position: fixed;
@@ -570,13 +844,13 @@
 
     /* Audio toggle button in header */
     .audio-toggle {
-      background: transparent;
-      border: 1px solid var(--rust);
-      color: var(--text-dim);
-      width: 30px;
-      height: 30px;
+      background: rgba(20, 5, 5, 0.6);
+      border: 2px solid var(--blood);
+      color: var(--text);
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
-      font-size: 0.8rem;
+      font-size: 1.6rem;
       cursor: crosshair;
       transition: all 0.3s ease;
       display: inline-flex;
@@ -585,40 +859,51 @@
       padding: 0;
       font-family: inherit;
       letter-spacing: 0;
+      text-shadow: 0 0 12px var(--blood-glow);
+      box-shadow: 0 0 14px var(--blood-glow), inset 0 0 10px rgba(139, 0, 0, 0.25);
     }
 
     .audio-toggle:hover {
-      color: var(--text);
+      color: var(--blood);
       border-color: var(--blood);
-      box-shadow: 0 0 10px var(--blood-glow);
+      box-shadow: 0 0 22px var(--blood-glow), inset 0 0 14px rgba(139, 0, 0, 0.4);
     }
 
     .audio-toggle.muted {
-      color: rgba(100, 100, 100, 0.5);
-      border-color: rgba(60, 60, 60, 0.5);
+      color: rgba(140, 140, 140, 0.7);
+      border-color: rgba(100, 100, 100, 0.6);
+      box-shadow: none;
+      text-shadow: none;
     }
 
-    /* Reduced motion: disable strobing / rapid movement */
+    /* Reduced motion: disable strobing / rapid movement.
+       Triggered either by the system preference OR by the user clicking
+       "Enable Reduced Motion" in the warning splash (which adds the
+       body.reduced-motion class). */
     @media (prefers-reduced-motion: reduce) {
       .hero-title::before,
       .hero-title::after {
         animation: none !important;
         display: none !important;
       }
-      .scroll-hint {
-        animation: none !important;
-        opacity: 0.7;
-      }
-      .terminal .cursor {
-        animation: none !important;
-      }
+      .scroll-hint { animation: none !important; opacity: 0.7; }
+      .terminal .cursor { animation: none !important; }
       .card,
       .cta-btn,
       .cta-btn::before,
-      nav a {
-        transition: none !important;
-      }
+      nav a { transition: none !important; }
     }
+    body.reduced-motion .hero-title::before,
+    body.reduced-motion .hero-title::after {
+      animation: none !important;
+      display: none !important;
+    }
+    body.reduced-motion .scroll-hint { animation: none !important; opacity: 0.7; }
+    body.reduced-motion .terminal .cursor { animation: none !important; }
+    body.reduced-motion .card,
+    body.reduced-motion .cta-btn,
+    body.reduced-motion .cta-btn::before,
+    body.reduced-motion nav a { transition: none !important; }
   </style>
 </head>
 <body>
@@ -649,6 +934,50 @@
     </div>
   </div>
 
+  <!-- Interaction prompt ([E] to open/close/pick-up) -->
+  <div class="interaction-prompt" id="interaction-prompt"></div>
+
+  <!-- Inventory bar (bottom-right) -->
+  <div class="inventory-bar" id="inventory-bar"></div>
+
+  <!-- Objectives checklist (top-right) -->
+  <div class="objectives" id="objectives">
+    <div class="obj-title">ESCAPE</div>
+    <div class="obj-row" data-obj="power"><span class="obj-mark">[ ]</span><span class="obj-text">Restore power (Generator room)</span></div>
+    <div class="obj-row" data-obj="fuses"><span class="obj-mark">[ ]</span><span class="obj-text">Collect 3 fuses</span></div>
+    <div class="obj-row" data-obj="exit"><span class="obj-mark">[ ]</span><span class="obj-text">Use exit control panel</span></div>
+  </div>
+
+  <!-- Win screen overlay -->
+  <div class="win-screen" id="win-screen">
+    <div class="win-box">
+      <div class="win-title">YOU ESCAPED</div>
+      <p class="win-text">
+        The end wall opened. You stepped through.
+        Whatever was hunting you is still down there.
+      </p>
+      <div class="win-stat">TIME: <strong id="win-time">00:00</strong></div>
+      <div class="win-stat">STATUS: <strong>ALIVE</strong></div>
+      <p class="win-text" style="margin-top:1rem;font-size:0.85rem;opacity:0.8">
+        Redirecting to taymcquaya.com…
+      </p>
+      <button class="win-btn" id="win-continue">[ Continue → ]</button>
+    </div>
+  </div>
+
+  <!-- Lose screen — shown when the creature catches the player -->
+  <div class="lose-screen" id="lose-screen">
+    <div class="lose-box">
+      <div class="lose-title">YOU DIED</div>
+      <p class="lose-text">
+        It caught you.<br>
+        Your tools scatter on the tunnel floor.
+      </p>
+      <div class="lose-stat">SURVIVED: <strong id="lose-time">00:00</strong></div>
+      <button class="lose-btn" id="lose-restart">[ Try again ]</button>
+    </div>
+  </div>
+
   <!-- Pointer-lock onboarding hint -->
   <div class="onboarding" id="onboarding">
     <span class="key">WASD</span> move &nbsp;·&nbsp;
@@ -667,9 +996,9 @@
   <header>
     <div class="logo">DESCENT</div>
     <nav>
-      <a href="#chamber-1">Story</a>
-      <a href="#chamber-2">Depths</a>
-      <a href="#chamber-3">Survive</a>
+      <a href="#chamber-1">Waking</a>
+      <a href="#chamber-2">Tunnel</a>
+      <a href="#chamber-3">Descent</a>
       <button class="audio-toggle" id="audio-toggle" aria-label="Toggle ambient sound" title="Toggle sound">♪</button>
     </nav>
   </header>
@@ -689,58 +1018,56 @@
       <span class="scroll-hint">[ SCROLL TO ENTER ]</span>
     </section>
 
-    <!-- Chamber 1: Story -->
+    <!-- Chamber 1: The Awakening -->
     <section class="chamber" id="chamber-1">
       <div class="chamber-content">
-        <span class="section-marker">CHAPTER 01</span>
-        <h2 class="section-title">You weren't supposed to survive</h2>
+        <span class="section-marker">I — THE WAKING</span>
+        <h2 class="section-title">You don't remember how you got here</h2>
         <p class="section-text">
-          Deep beneath Tokyo's subway system lies a network of tunnels that don't appear on any map.
-          You wake in darkness. The train is gone. Something moves ahead.
+          A corridor in the dark. Warm walls. Behind you, something is breathing.
         </p>
         <div class="terminal">
           <div class="line"><span class="prompt">></span> LOCATION: UNKNOWN</div>
-          <div class="line"><span class="prompt">></span> DEPTH: -847m</div>
-          <div class="line"><span class="prompt">></span> WARNING: DO NOT LOOK BACK<span class="cursor"></span></div>
+          <div class="line"><span class="prompt">></span> SIGNAL: NONE<span class="cursor"></span></div>
         </div>
       </div>
     </section>
 
-    <!-- Chamber 2: Depths -->
+    <!-- Chamber 2: The Tunnel -->
     <section class="chamber" id="chamber-2">
       <div class="chamber-content">
-        <span class="section-marker">CHAPTER 02</span>
-        <h2 class="section-title">The deeper you go, the darker it gets</h2>
+        <span class="section-marker">II — THE TUNNEL</span>
+        <h2 class="section-title">Six doors. Each was sealed.</h2>
         <p class="section-text">
-          Every corridor leads somewhere worse. The creature behind you never stops.
+          Find the fuses. Restore the power. Reach the exit before it reaches you.
         </p>
         <div class="cards-row">
           <div class="card">
-            <span class="card-level">LEVEL B1</span>
-            <h3>The Station</h3>
-            <p>Warnings written in blood on the walls.</p>
+            <span class="card-level">FUSES</span>
+            <h3>Three</h3>
+            <p>The exit needs all of them.</p>
           </div>
           <div class="card">
-            <span class="card-level">LEVEL B4</span>
-            <h3>The Lab</h3>
-            <p>They created something. It hunts.</p>
+            <span class="card-level">POWER</span>
+            <h3>Generator</h3>
+            <p>Find the lever.</p>
           </div>
           <div class="card">
-            <span class="card-level">LEVEL B7</span>
-            <h3>The Pit</h3>
-            <p>You've gone too far.</p>
+            <span class="card-level">EXIT</span>
+            <h3>End of the hall</h3>
+            <p>If it opens — run.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Chamber 3: Survive -->
+    <!-- Chamber 3: Begin -->
     <section class="chamber" id="chamber-3">
       <div class="chamber-content">
-        <span class="section-marker">CHAPTER 03</span>
-        <h2 class="section-title">Will you escape the darkness?</h2>
+        <span class="section-marker">III — DESCENT</span>
+        <h2 class="section-title">Don't stop moving</h2>
         <p class="section-text">
-          No weapons. No hiding. Only the desperate hope that you can outrun what lurks behind.
+          No weapons. No map. If it touches you, the descent ends here.
         </p>
         <button class="cta-btn">Begin your descent</button>
       </div>
@@ -760,1699 +1087,6 @@
     }
   </script>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
-    import {
-      EffectComposer,
-      RenderPass,
-      EffectPass,
-      BloomEffect,
-      ChromaticAberrationEffect,
-      VignetteEffect,
-      NoiseEffect,
-      BlendFunction
-    } from 'postprocessing';
-
-    // Feature flags
-    const isMobile =
-      window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
-      window.innerWidth < 900;
-
-    let reducedMotion =
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    let scene, camera, renderer;
-    let composer, bloomEffect, chromaticAberrationEffect, noiseEffect;
-    let tunnelGroup;
-    let currentSection = 0;
-    let targetZ = 5;
-    let currentZ = 5;
-    const sectionDepth = 20;
-
-    let flashlight;
-    const mouse = new THREE.Vector2();
-    const raycaster = new THREE.Raycaster();
-    const doorMeshes = [];
-    let hoveredDoor = null;
-
-    const tunnelLights = [];
-
-    let controls;
-    let isExploring = false;
-    const moveState = { forward: false, backward: false, left: false, right: false, sprint: false };
-    const velocity = new THREE.Vector3();
-    const direction = new THREE.Vector3();
-    let prevTime = performance.now();
-
-    let fogLayers;
-
-    let creature;
-    let creatureVisible = false;
-    let creatureChasing = false;
-    let creatureLastTime = 0;
-    let creatureSpawnTimer = null;
-    const CREATURE_SPAWN_DELAY_MS = 60000; // 1 minute of exploration
-    const CREATURE_CHASE_SPEED = 2.0;      // slow, menacing
-    const CREATURE_TOUCH_DISTANCE = 1.5;
-
-    // Cached wall canvas — creating 6 separate 512x512 canvases was wasteful
-    let cachedWallCanvas = null;
-
-    // ─────────── Ambient audio (procedural, no external files) ───────────
-    // Low sub-drone + slow-beating harmonics + band-passed pink noise (wind)
-    // + random distant creaks. Built with Web Audio, started on user gesture.
-    let audioCtx = null;
-    let masterGain = null;
-    let audioMuted = false;
-    const AUDIO_MASTER_VOLUME = 0.55;
-
-    function initAudio() {
-      if (audioCtx) return;
-      try {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      } catch (e) {
-        return; // audio unsupported, fail silently
-      }
-
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0;
-      masterGain.connect(audioCtx.destination);
-
-      // Fade in over 3s so it doesn't startle
-      masterGain.gain.linearRampToValueAtTime(
-        AUDIO_MASTER_VOLUME,
-        audioCtx.currentTime + 3
-      );
-
-      buildDrone();
-      buildWindNoise();
-      scheduleCreaks();
-    }
-
-    function buildDrone() {
-      const ctx = audioCtx;
-      // Two slightly detuned sub-oscillators create a slow beating "breathing"
-      const subA = ctx.createOscillator();
-      subA.type = 'sine';
-      subA.frequency.value = 42;
-      const subB = ctx.createOscillator();
-      subB.type = 'sine';
-      subB.frequency.value = 42.4;
-
-      const subGain = ctx.createGain();
-      subGain.gain.value = 0.18;
-      subA.connect(subGain);
-      subB.connect(subGain);
-      subGain.connect(masterGain);
-
-      // Mid-range drone for body
-      const mid = ctx.createOscillator();
-      mid.type = 'sine';
-      mid.frequency.value = 110;
-      const midGain = ctx.createGain();
-      midGain.gain.value = 0.04;
-      mid.connect(midGain);
-      midGain.connect(masterGain);
-
-      // Slow LFO modulating the mid gain — feels like the space breathing
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.value = 0.08;
-      const lfoAmp = ctx.createGain();
-      lfoAmp.gain.value = 0.06;
-      lfo.connect(lfoAmp);
-      lfoAmp.connect(midGain.gain);
-
-      subA.start();
-      subB.start();
-      mid.start();
-      lfo.start();
-    }
-
-    function buildWindNoise() {
-      const ctx = audioCtx;
-      const bufferSize = ctx.sampleRate * 4;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      // Pink noise via Voss-McCartney approximation (softer than white noise)
-      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
-      for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        b0 = 0.99886 * b0 + white * 0.0555179;
-        b1 = 0.99332 * b1 + white * 0.0750759;
-        b2 = 0.96900 * b2 + white * 0.1538520;
-        b3 = 0.86650 * b3 + white * 0.3104856;
-        b4 = 0.55000 * b4 + white * 0.5329522;
-        b5 = -0.7616 * b5 - white * 0.0168980;
-        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
-        b6 = white * 0.115926;
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-      noise.loop = true;
-
-      // Static low-frequency rumble — NOT a bandpass sweep (which produced the
-      // ocean-waves character). Keeping everything below ~160Hz makes it feel
-      // like cavernous air pressure / distant machinery instead of surf.
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 160;
-      filter.Q.value = 0.4;
-
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.value = 0.06;
-
-      noise.connect(filter);
-      filter.connect(noiseGain);
-      noiseGain.connect(masterGain);
-
-      noise.start();
-    }
-
-    // ─────────── Chase audio (starts when creature spawns) ───────────
-    let chaseAudioNodes = null;
-
-    function startChaseAudio() {
-      if (!audioCtx || !masterGain || chaseAudioNodes) return;
-      const ctx = audioCtx;
-      const now = ctx.currentTime;
-
-      // Dedicated gain bus so the whole chase layer fades in/out cleanly
-      const chaseGain = ctx.createGain();
-      chaseGain.gain.value = 0;
-      chaseGain.connect(masterGain);
-      chaseGain.gain.linearRampToValueAtTime(0.85, now + 1.5);
-
-      // 1) Heartbeat — 110 BPM low thump
-      const heartOsc = ctx.createOscillator();
-      heartOsc.type = 'sine';
-      heartOsc.frequency.value = 55;
-      const heartGain = ctx.createGain();
-      heartGain.gain.value = 0;
-      heartOsc.connect(heartGain);
-      heartGain.connect(chaseGain);
-      heartOsc.start();
-
-      const beatInterval = 60 / 110;
-      let nextBeat = now + 0.25;
-      const heartInterval = setInterval(() => {
-        if (!audioCtx) return;
-        const t = audioCtx.currentTime;
-        // Schedule pulses ~2s ahead so there are no gaps
-        while (nextBeat < t + 2) {
-          heartGain.gain.setValueAtTime(0, nextBeat);
-          heartGain.gain.linearRampToValueAtTime(0.75, nextBeat + 0.025);
-          heartGain.gain.exponentialRampToValueAtTime(0.001, nextBeat + 0.22);
-          nextBeat += beatInterval;
-        }
-      }, 400);
-
-      // 2) Dissonant drone — tritone interval (E + A#) = maximum unease
-      const drone1 = ctx.createOscillator();
-      drone1.type = 'sawtooth';
-      drone1.frequency.value = 164.8;
-      const drone2 = ctx.createOscillator();
-      drone2.type = 'sawtooth';
-      drone2.frequency.value = 233.1;
-
-      const droneFilter = ctx.createBiquadFilter();
-      droneFilter.type = 'lowpass';
-      droneFilter.frequency.value = 650;
-      droneFilter.Q.value = 2.5;
-
-      const droneGain = ctx.createGain();
-      droneGain.gain.value = 0.055;
-
-      drone1.connect(droneFilter);
-      drone2.connect(droneFilter);
-      droneFilter.connect(droneGain);
-      droneGain.connect(chaseGain);
-
-      // Slow filter LFO makes the drone feel like it's pulsing toward you
-      const droneLfo = ctx.createOscillator();
-      droneLfo.type = 'sine';
-      droneLfo.frequency.value = 0.18;
-      const droneLfoAmp = ctx.createGain();
-      droneLfoAmp.gain.value = 260;
-      droneLfo.connect(droneLfoAmp);
-      droneLfoAmp.connect(droneFilter.frequency);
-
-      drone1.start();
-      drone2.start();
-      droneLfo.start();
-
-      // 3) High-passed breath / scrape — white noise modulated by slow LFO
-      const bufSize = ctx.sampleRate * 2;
-      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const bufData = buf.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) bufData[i] = Math.random() * 2 - 1;
-
-      const breath = ctx.createBufferSource();
-      breath.buffer = buf;
-      breath.loop = true;
-
-      const breathFilter = ctx.createBiquadFilter();
-      breathFilter.type = 'highpass';
-      breathFilter.frequency.value = 1800;
-      breathFilter.Q.value = 0.8;
-
-      const breathGain = ctx.createGain();
-      breathGain.gain.value = 0.015;
-      breath.connect(breathFilter);
-      breathFilter.connect(breathGain);
-      breathGain.connect(chaseGain);
-
-      // Breath amplitude LFO — in/out pattern, ~18 breaths per minute
-      const breathLfo = ctx.createOscillator();
-      breathLfo.type = 'sine';
-      breathLfo.frequency.value = 0.3;
-      const breathLfoAmp = ctx.createGain();
-      breathLfoAmp.gain.value = 0.045;
-      breathLfo.connect(breathLfoAmp);
-      breathLfoAmp.connect(breathGain.gain);
-      breathLfo.start();
-
-      breath.start();
-
-      chaseAudioNodes = {
-        chaseGain,
-        oscillators: [heartOsc, drone1, drone2, droneLfo, breathLfo],
-        sources: [breath],
-        heartInterval
-      };
-    }
-
-    // ─────────── Monster appearance sting (one-shot) ───────────
-    // Three-layer non-growl monster vocalization:
-    //   1) Sub-impact thump  — grounds the sting, gives it physical weight
-    //   2) Sharp inhale gasp — bandpass-swept noise, ~0.5s
-    //   3) Descending wail   — sawtooth with amplitude-modulation warble
-    //                          for an alien/metallic voice character
-    function playMonsterAppear() {
-      if (!audioCtx || !masterGain || audioMuted) return;
-      const ctx = audioCtx;
-      const now = ctx.currentTime;
-      const duration = 2.6;
-
-      // Master sting envelope — sharp attack, long exponential tail
-      const stingGain = ctx.createGain();
-      stingGain.gain.setValueAtTime(0, now);
-      stingGain.gain.linearRampToValueAtTime(0.6, now + 0.05);
-      stingGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-      stingGain.connect(masterGain);
-
-      // 1) Sub-impact thump
-      const sub = ctx.createOscillator();
-      sub.type = 'sine';
-      sub.frequency.setValueAtTime(85, now);
-      sub.frequency.exponentialRampToValueAtTime(34, now + 0.3);
-      const subGain = ctx.createGain();
-      subGain.gain.setValueAtTime(0, now);
-      subGain.gain.linearRampToValueAtTime(0.42, now + 0.02);
-      subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-      sub.connect(subGain);
-      subGain.connect(stingGain);
-      sub.start(now);
-      sub.stop(now + 0.6);
-
-      // 2) Sharp inhale gasp — noise through a bandpass that sweeps upward
-      const bufSize = ctx.sampleRate * 0.6;
-      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const bufData = buf.getChannelData(0);
-      for (let i = 0; i < bufSize; i++) bufData[i] = Math.random() * 2 - 1;
-      const gasp = ctx.createBufferSource();
-      gasp.buffer = buf;
-
-      const gaspFilter = ctx.createBiquadFilter();
-      gaspFilter.type = 'bandpass';
-      gaspFilter.Q.value = 4.5;
-      gaspFilter.frequency.setValueAtTime(750, now);
-      gaspFilter.frequency.exponentialRampToValueAtTime(2400, now + 0.42);
-
-      const gaspGain = ctx.createGain();
-      gaspGain.gain.setValueAtTime(0, now);
-      gaspGain.gain.linearRampToValueAtTime(0.28, now + 0.05);
-      gaspGain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-
-      gasp.connect(gaspFilter);
-      gaspFilter.connect(gaspGain);
-      gaspGain.connect(stingGain);
-      gasp.start(now);
-
-      // 3) Descending wail with AM warble (no growling — vocal-like timbre)
-      const wail = ctx.createOscillator();
-      wail.type = 'sawtooth';
-      wail.frequency.setValueAtTime(880, now);
-      wail.frequency.exponentialRampToValueAtTime(120, now + duration * 0.85);
-
-      // Amplitude modulation gives an "inhuman voice" warble.
-      // amGain.gain ranges 0..1 driven by modulator at ~47Hz.
-      const amGain = ctx.createGain();
-      amGain.gain.value = 0.5;
-
-      const modulator = ctx.createOscillator();
-      modulator.type = 'sine';
-      modulator.frequency.setValueAtTime(47, now);
-      // Modulator slows down with the wail for a "stretching" effect
-      modulator.frequency.exponentialRampToValueAtTime(22, now + duration);
-      const modulatorGain = ctx.createGain();
-      modulatorGain.gain.value = 0.5;
-      modulator.connect(modulatorGain);
-      modulatorGain.connect(amGain.gain);
-
-      const wailHpf = ctx.createBiquadFilter();
-      wailHpf.type = 'highpass';
-      wailHpf.frequency.value = 110; // strip the sub-rumble — sub layer covers that
-
-      const wailGain = ctx.createGain();
-      wailGain.gain.setValueAtTime(0, now);
-      wailGain.gain.linearRampToValueAtTime(0.18, now + 0.08);
-      wailGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-      wail.connect(amGain);
-      amGain.connect(wailHpf);
-      wailHpf.connect(wailGain);
-      wailGain.connect(stingGain);
-
-      wail.start(now);
-      wail.stop(now + duration + 0.05);
-      modulator.start(now);
-      modulator.stop(now + duration + 0.05);
-
-      // Cleanup — disconnect after the sting fully decays
-      setTimeout(() => {
-        try { stingGain.disconnect(); } catch (e) {}
-      }, (duration + 0.5) * 1000);
-    }
-
-    function stopChaseAudio() {
-      if (!chaseAudioNodes || !audioCtx) return;
-      const { chaseGain, oscillators, sources, heartInterval } = chaseAudioNodes;
-      chaseAudioNodes = null;
-
-      clearInterval(heartInterval);
-
-      const now = audioCtx.currentTime;
-      chaseGain.gain.cancelScheduledValues(now);
-      chaseGain.gain.setValueAtTime(chaseGain.gain.value, now);
-      chaseGain.gain.linearRampToValueAtTime(0, now + 0.6);
-
-      // Stop everything after the fade completes
-      setTimeout(() => {
-        oscillators.forEach(o => { try { o.stop(); } catch (e) {} });
-        sources.forEach(s => { try { s.stop(); } catch (e) {} });
-        try { chaseGain.disconnect(); } catch (e) {}
-      }, 700);
-    }
-
-    function scheduleCreaks() {
-      function playCreak() {
-        if (!audioCtx) return;
-        if (!audioMuted) {
-          const ctx = audioCtx;
-          const now = ctx.currentTime;
-          const duration = 1.4 + Math.random() * 2.2;
-
-          // Sawtooth with downward pitch bend = groan/creak character
-          const osc = ctx.createOscillator();
-          osc.type = 'sawtooth';
-          const startFreq = 75 + Math.random() * 55;
-          osc.frequency.setValueAtTime(startFreq, now);
-          osc.frequency.exponentialRampToValueAtTime(
-            startFreq * 0.5,
-            now + duration
-          );
-
-          const filter = ctx.createBiquadFilter();
-          filter.type = 'lowpass';
-          filter.frequency.value = 260;
-          filter.Q.value = 4;
-
-          const gain = ctx.createGain();
-          gain.gain.setValueAtTime(0, now);
-          gain.gain.linearRampToValueAtTime(0.13, now + 0.35);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-          osc.connect(filter);
-          filter.connect(gain);
-          gain.connect(masterGain);
-          osc.start(now);
-          osc.stop(now + duration + 0.05);
-        }
-        // Schedule next creak 8-26s later
-        setTimeout(playCreak, 8000 + Math.random() * 18000);
-      }
-      setTimeout(playCreak, 6000 + Math.random() * 8000);
-    }
-
-    function setAudioMuted(muted) {
-      if (!audioCtx || !masterGain) return;
-      audioMuted = muted;
-      const now = audioCtx.currentTime;
-      masterGain.gain.cancelScheduledValues(now);
-      masterGain.gain.linearRampToValueAtTime(
-        muted ? 0 : AUDIO_MASTER_VOLUME,
-        now + 0.35
-      );
-      const btn = document.getElementById('audio-toggle');
-      if (btn) btn.classList.toggle('muted', muted);
-    }
-
-    function setupAudioToggle() {
-      const btn = document.getElementById('audio-toggle');
-      if (!btn) return;
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // First click may happen before initAudio — covers that edge case
-        if (!audioCtx) initAudio();
-        // Resume if suspended by autoplay policy
-        if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-        setAudioMuted(!audioMuted);
-      });
-    }
-
-    function bootstrap() {
-      // Mobile: skip Three.js entirely, show fallback screen
-      if (isMobile) {
-        document.getElementById('mobile-fallback').style.display = 'flex';
-        document.getElementById('warning-splash').style.display = 'none';
-        return;
-      }
-
-      // Show photosensitivity warning first, wait for user choice
-      const splash = document.getElementById('warning-splash');
-      const previouslyAccepted = localStorage.getItem('descent-warning-accepted');
-
-      // Returning visitors skip the warning, but audio still needs a gesture —
-      // hook a one-shot listener so their first click/key starts the soundscape
-      const startAudioOnFirstGesture = () => {
-        initAudio();
-        document.removeEventListener('pointerdown', startAudioOnFirstGesture);
-        document.removeEventListener('keydown', startAudioOnFirstGesture);
-      };
-
-      if (previouslyAccepted === 'reduced') {
-        reducedMotion = true;
-        splash.style.display = 'none';
-        document.addEventListener('pointerdown', startAudioOnFirstGesture, { once: true });
-        document.addEventListener('keydown', startAudioOnFirstGesture, { once: true });
-        init();
-      } else if (previouslyAccepted === 'full') {
-        splash.style.display = 'none';
-        document.addEventListener('pointerdown', startAudioOnFirstGesture, { once: true });
-        document.addEventListener('keydown', startAudioOnFirstGesture, { once: true });
-        init();
-      } else {
-        document.getElementById('warning-continue').addEventListener('click', () => {
-          localStorage.setItem('descent-warning-accepted', 'full');
-          splash.style.display = 'none';
-          initAudio(); // click IS the user gesture — good time to start audio
-          init();
-        });
-        document.getElementById('warning-reduced').addEventListener('click', () => {
-          localStorage.setItem('descent-warning-accepted', 'reduced');
-          reducedMotion = true;
-          splash.style.display = 'none';
-          initAudio();
-          init();
-        });
-      }
-    }
-
-    function init() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x050202);
-      // Horror fog - limited visibility, things emerge from darkness
-      scene.fog = new THREE.FogExp2(0x050202, 0.045);
-
-      camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 300);
-      camera.position.set(0, 0.5, 5);
-      camera.lookAt(0, 0.5, -10);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      document.getElementById('tunnel-container').appendChild(renderer.domElement);
-
-      createTunnel();
-      createLights();
-      createFlashlight();
-      createFogLayers();
-      createCreature();
-      setupPostProcessing();
-      setupMouseTracking();
-      initExplorationControls();
-      setupAudioToggle();
-
-      window.addEventListener('resize', onWindowResize);
-      setupScrollDetection();
-      setupScrollEvents();
-
-      animate();
-    }
-
-    function createWallTexture() {
-      if (!cachedWallCanvas) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-
-        ctx.fillStyle = '#1a1512';
-        ctx.fillRect(0, 0, 512, 512);
-
-        for (let i = 0; i < 3000; i++) {
-          const x = Math.random() * 512;
-          const y = Math.random() * 512;
-          const brightness = 20 + Math.random() * 40;
-          ctx.fillStyle = `rgba(${brightness}, ${brightness * 0.8}, ${brightness * 0.7}, 0.4)`;
-          ctx.fillRect(x, y, Math.random() * 4 + 1, Math.random() * 4 + 1);
-        }
-
-        for (let i = 0; i < 15; i++) {
-          const x = Math.random() * 512;
-          ctx.strokeStyle = `rgba(80, 30, 20, ${Math.random() * 0.4})`;
-          ctx.lineWidth = Math.random() * 8 + 2;
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x + (Math.random() - 0.5) * 60, 512);
-          ctx.stroke();
-        }
-        cachedWallCanvas = canvas;
-      }
-
-      const texture = new THREE.CanvasTexture(cachedWallCanvas);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      return texture;
-    }
-
-    function createDoor(z, side) {
-      const doorGroup = new THREE.Group();
-      const tunnelWidth = 5;
-      const doorHeight = 3.5;
-
-      const frameMat = new THREE.MeshStandardMaterial({
-        color: 0x2a1a15,
-        roughness: 0.85,
-        metalness: 0.3,
-        emissive: 0x1a0a08,
-        emissiveIntensity: 0.4
-      });
-
-      const frameTop = new THREE.Mesh(new THREE.BoxGeometry(2, 0.2, 0.3), frameMat);
-      frameTop.position.y = doorHeight;
-      doorGroup.add(frameTop);
-
-      const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(0.18, doorHeight, 0.3), frameMat);
-      frameLeft.position.set(-0.9, doorHeight / 2, 0);
-      doorGroup.add(frameLeft);
-
-      const frameRight = frameLeft.clone();
-      frameRight.position.x = 0.9;
-      doorGroup.add(frameRight);
-
-      const doorMat = new THREE.MeshStandardMaterial({
-        color: 0x3a2a22,
-        roughness: 0.8,
-        metalness: 0.2,
-        emissive: 0x1a0a05,
-        emissiveIntensity: 0.3
-      });
-
-      const door = new THREE.Mesh(new THREE.BoxGeometry(1.6, doorHeight - 0.3, 0.12), doorMat);
-      door.position.set(0, doorHeight / 2, -0.15);
-      doorGroup.add(door);
-      doorMeshes.push(door);
-
-      const handle = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2, 0.12, 0.18),
-        new THREE.MeshStandardMaterial({ color: 0x5a4035, metalness: 0.6, roughness: 0.4 })
-      );
-      handle.position.set(0.5, 1.5, 0.02);
-      doorGroup.add(handle);
-
-      // ALARM LIGHT above the door (emissive mesh only for performance)
-      const alarmLight = new THREE.Mesh(
-        new THREE.BoxGeometry(0.4, 0.15, 0.2),
-        new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.95 })
-      );
-      alarmLight.position.set(0, doorHeight + 0.5, 0.1);
-      doorGroup.add(alarmLight);
-
-      // Light glow under some doors (visual only)
-      if (Math.random() > 0.5) {
-        const glow = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.2, 0.1),
-          new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.7 })
-        );
-        glow.rotation.x = -Math.PI / 2;
-        glow.position.set(0, 0.02, 0.15);
-        doorGroup.add(glow);
-      }
-
-      const x = (tunnelWidth / 2 - 0.05) * side;
-      doorGroup.position.set(x, -2, z);
-      doorGroup.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
-
-      return doorGroup;
-    }
-
-    function createSideCorridor(z, side) {
-      const corridorGroup = new THREE.Group();
-      const tunnelWidth = 5;
-      const corridorDepth = 12;
-      const corridorWidth = 4;
-
-      const wallTexture = createWallTexture();
-      wallTexture.repeat.set(2, 2);
-
-      const wallMat = new THREE.MeshStandardMaterial({
-        map: wallTexture,
-        roughness: 0.7,
-        metalness: 0.15,
-        color: 0x3a3530,
-        emissive: 0x150a08,
-        emissiveIntensity: 0.5
-      });
-
-      const floorMat = new THREE.MeshStandardMaterial({
-        map: wallTexture.clone(),
-        roughness: 0.75,
-        metalness: 0.1,
-        color: 0x3a3535,
-        emissive: 0x120808,
-        emissiveIntensity: 0.4
-      });
-
-      // Side corridor floor
-      const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(corridorDepth, corridorWidth),
-        floorMat
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.rotation.z = Math.PI / 2;
-      floor.position.set(side * (tunnelWidth / 2 + corridorDepth / 2), -2, z);
-      corridorGroup.add(floor);
-
-      // Side corridor ceiling
-      const ceiling = floor.clone();
-      ceiling.rotation.x = Math.PI / 2;
-      ceiling.position.y = 4;
-      corridorGroup.add(ceiling);
-
-      // Back wall (end of corridor)
-      const backWall = new THREE.Mesh(
-        new THREE.PlaneGeometry(corridorWidth, 6),
-        wallMat
-      );
-      backWall.rotation.y = side > 0 ? Math.PI : 0;
-      backWall.position.set(side * (tunnelWidth / 2 + corridorDepth), 1, z);
-      corridorGroup.add(backWall);
-
-      // Side walls of the corridor
-      const sideWall1 = new THREE.Mesh(
-        new THREE.PlaneGeometry(corridorDepth, 6),
-        wallMat
-      );
-      sideWall1.rotation.y = Math.PI / 2;
-      sideWall1.position.set(side * (tunnelWidth / 2 + corridorDepth / 2), 1, z - corridorWidth / 2);
-      corridorGroup.add(sideWall1);
-
-      const sideWall2 = sideWall1.clone();
-      sideWall2.rotation.y = -Math.PI / 2;
-      sideWall2.position.z = z + corridorWidth / 2;
-      corridorGroup.add(sideWall2);
-
-      // Glowing fixture at end (emissive only for performance)
-      const fixture = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 0.1, 0.3),
-        new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.9 })
-      );
-      fixture.position.set(side * (tunnelWidth / 2 + corridorDepth - 2), 3.8, z);
-      corridorGroup.add(fixture);
-
-      // Optional: something creepy at the end (silhouette)
-      if (Math.random() > 0.7) {
-        const silhouette = new THREE.Mesh(
-          new THREE.BoxGeometry(0.8, 2.5, 0.3),
-          new THREE.MeshBasicMaterial({ color: 0x000000 })
-        );
-        silhouette.position.set(side * (tunnelWidth / 2 + corridorDepth - 1.5), 0.25, z);
-        corridorGroup.add(silhouette);
-      }
-
-      return corridorGroup;
-    }
-
-    function createTunnel() {
-      tunnelGroup = new THREE.Group();
-
-      const wallTexture = createWallTexture();
-      wallTexture.repeat.set(3, 15);
-
-      const tunnelLength = 180;
-      const tunnelWidth = 5;
-
-      const floorMat = new THREE.MeshStandardMaterial({
-        map: wallTexture.clone(),
-        roughness: 0.75,
-        metalness: 0.1,
-        color: 0x4a4040,
-        emissive: 0x1a0a08,
-        emissiveIntensity: 0.5
-      });
-
-      const wallMat = new THREE.MeshStandardMaterial({
-        map: wallTexture.clone(),
-        roughness: 0.7,
-        metalness: 0.15,
-        color: 0x4a4038,
-        emissive: 0x1a0c08,
-        emissiveIntensity: 0.6
-      });
-
-      // Floor
-      const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(tunnelWidth, tunnelLength),
-        floorMat
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(0, -2, -tunnelLength / 2 + 20);
-      tunnelGroup.add(floor);
-
-      // Ceiling
-      const ceiling = floor.clone();
-      ceiling.rotation.x = Math.PI / 2;
-      ceiling.position.y = 4;
-      tunnelGroup.add(ceiling);
-
-      // Walls
-      const wallGeo = new THREE.PlaneGeometry(tunnelLength, 6);
-
-      const leftWall = new THREE.Mesh(wallGeo, wallMat);
-      leftWall.rotation.y = Math.PI / 2;
-      leftWall.position.set(-tunnelWidth / 2, 1, -tunnelLength / 2 + 20);
-      tunnelGroup.add(leftWall);
-
-      const rightWall = new THREE.Mesh(wallGeo, wallMat);
-      rightWall.rotation.y = -Math.PI / 2;
-      rightWall.position.set(tunnelWidth / 2, 1, -tunnelLength / 2 + 20);
-      tunnelGroup.add(rightWall);
-
-      const beamMat = new THREE.MeshStandardMaterial({
-        color: 0x3a2520,
-        roughness: 0.8,
-        metalness: 0.25,
-        emissive: 0x100505,
-        emissiveIntensity: 0.3
-      });
-
-      // Support beams, doors, and side corridors
-      const corridorPositions = [4, 10, 18, 24];
-
-      // Fixed door positions: { beamIndex, side } - well spaced, no repetition, not near end
-      const doorPlacements = [
-        { i: 2, side: -1 },   // Left side early
-        { i: 5, side: 1 },    // Right side
-        { i: 7, side: -1 },   // Left side
-        { i: 12, side: 1 },   // Right side mid
-        { i: 14, side: -1 },  // Left side
-        { i: 16, side: 1 },   // Right side - last door before end
-      ];
-
-      for (let i = 0; i < 28; i++) {
-        const z = 8 - i * 6;
-        const isCorridorPos = corridorPositions.includes(i);
-
-        // Beams (skip where corridors are)
-        if (!isCorridorPos) {
-          const leftBeam = new THREE.Mesh(new THREE.BoxGeometry(0.2, 6, 0.2), beamMat);
-          leftBeam.position.set(-tunnelWidth / 2 + 0.1, 1, z);
-          tunnelGroup.add(leftBeam);
-
-          const rightBeam = leftBeam.clone();
-          rightBeam.position.x = tunnelWidth / 2 - 0.1;
-          tunnelGroup.add(rightBeam);
-        }
-
-        const topBeam = new THREE.Mesh(new THREE.BoxGeometry(tunnelWidth, 0.15, 0.15), beamMat);
-        topBeam.position.set(0, 4, z);
-        tunnelGroup.add(topBeam);
-
-        // Floor AND ceiling lights at EVERY SECOND beam separation (symmetric)
-        if (i % 2 === 0) {
-          const lightMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.9 });
-
-          // Floor lights
-          const floorLightLeft = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.08, 0.15),
-            lightMat
-          );
-          floorLightLeft.position.set(-tunnelWidth / 2 + 0.4, -1.95, z);
-          tunnelGroup.add(floorLightLeft);
-
-          const floorLightRight = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.08, 0.15),
-            lightMat
-          );
-          floorLightRight.position.set(tunnelWidth / 2 - 0.4, -1.95, z);
-          tunnelGroup.add(floorLightRight);
-
-          // Ceiling lights (symmetric to floor)
-          const ceilingLightLeft = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.08, 0.15),
-            lightMat
-          );
-          ceilingLightLeft.position.set(-tunnelWidth / 2 + 0.4, 3.95, z);
-          tunnelGroup.add(ceilingLightLeft);
-
-          const ceilingLightRight = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.08, 0.15),
-            lightMat
-          );
-          ceilingLightRight.position.set(tunnelWidth / 2 - 0.4, 3.95, z);
-          tunnelGroup.add(ceilingLightRight);
-        }
-
-        // Side corridors at specific positions
-        if (isCorridorPos) {
-          const side = (i % 2 === 0) ? -1 : 1;
-          const corridor = createSideCorridor(z, side);
-          tunnelGroup.add(corridor);
-        }
-
-        // Doors at fixed positions only
-        const doorPlacement = doorPlacements.find(d => d.i === i);
-        if (doorPlacement) {
-          const doorZ = z + 3; // Offset between beams
-          const door = createDoor(doorZ, doorPlacement.side);
-          tunnelGroup.add(door);
-        }
-      }
-
-      // Pipes
-      const pipeMat = new THREE.MeshStandardMaterial({
-        color: 0x4a2525,
-        roughness: 0.5,
-        metalness: 0.5
-      });
-
-      const pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, tunnelLength, 8), pipeMat);
-      pipe1.rotation.x = Math.PI / 2;
-      pipe1.position.set(-2, 3.5, -tunnelLength / 2 + 20);
-      tunnelGroup.add(pipe1);
-
-      const pipe2 = pipe1.clone();
-      pipe2.position.x = 2;
-      tunnelGroup.add(pipe2);
-
-      // END WALL with "DESCENT" bloody graffiti
-      const endWallZ = -62;
-
-      // Use same wall texture and settings as tunnel walls for consistency
-      const endWallTexture = createWallTexture();
-      endWallTexture.repeat.set(2, 2);
-
-      const endWall = new THREE.Mesh(
-        new THREE.PlaneGeometry(tunnelWidth, 6),
-        new THREE.MeshStandardMaterial({
-          map: endWallTexture,
-          roughness: 0.7,
-          metalness: 0.15,
-          color: 0x3a3530,
-          emissive: 0x150a08,
-          emissiveIntensity: 0.5
-        })
-      );
-      endWall.position.set(0, 1, endWallZ);
-      tunnelGroup.add(endWall);
-
-      // BLOODY GRAFFITI - "Wanna Play?" with dripping blood effect
-      const graffitiCanvas = document.createElement('canvas');
-      graffitiCanvas.width = 2048;
-      graffitiCanvas.height = 1024;
-      const ctx = graffitiCanvas.getContext('2d');
-
-      ctx.clearRect(0, 0, 2048, 1024);
-
-      // Finger smear marks in background
-      for (let i = 0; i < 8; i++) {
-        const smearX = 100 + Math.random() * 1800;
-        const smearY = 200 + Math.random() * 600;
-        ctx.save();
-        ctx.translate(smearX, smearY);
-        ctx.rotate((Math.random() - 0.5) * 0.5);
-
-        // Finger drag marks
-        for (let f = 0; f < 4; f++) {
-          ctx.fillStyle = `rgba(60, 0, 0, ${0.15 + Math.random() * 0.15})`;
-          ctx.beginPath();
-          ctx.ellipse(f * 12, 0, 8, 40 + Math.random() * 80, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // Blood splatters
-      for (let i = 0; i < 60; i++) {
-        const x = 150 + Math.random() * 1700;
-        const y = 150 + Math.random() * 700;
-        const r = 2 + Math.random() * 12;
-
-        ctx.fillStyle = `rgba(${70 + Math.random() * 30}, 0, 0, ${0.4 + Math.random() * 0.4})`;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Drip trails from splatters
-        if (Math.random() > 0.6) {
-          const dripLen = 30 + Math.random() * 120;
-          ctx.fillStyle = `rgba(50, 0, 0, ${0.3 + Math.random() * 0.3})`;
-          ctx.beginPath();
-          ctx.moveTo(x - 2, y);
-          ctx.quadraticCurveTo(x - 3, y + dripLen * 0.7, x, y + dripLen);
-          ctx.quadraticCurveTo(x + 3, y + dripLen * 0.7, x + 2, y);
-          ctx.fill();
-        }
-      }
-
-      // Main text: "Wanna Play?"
-      const text = "Wanna Play?";
-      const baseY = 520;
-
-      // Draw text with thick bloody strokes
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-
-      // Shadow/glow layer
-      for (let i = 0; i < 15; i++) {
-        ctx.font = `${200 + Math.random() * 10}px "Creepster", cursive`;
-        ctx.fillStyle = `rgba(30, 0, 0, ${0.1 + Math.random() * 0.1})`;
-        ctx.fillText(text, 1024 + (Math.random() - 0.5) * 20, baseY + (Math.random() - 0.5) * 20);
-      }
-
-      // Rough painted strokes
-      for (let stroke = 0; stroke < 12; stroke++) {
-        const offsetX = (Math.random() - 0.5) * 15;
-        const offsetY = (Math.random() - 0.5) * 15;
-        ctx.font = `${195 + Math.random() * 15}px "Creepster", cursive`;
-        ctx.fillStyle = `rgba(${100 + Math.random() * 40}, 0, 0, ${0.2 + Math.random() * 0.3})`;
-        ctx.fillText(text, 1024 + offsetX, baseY + offsetY);
-      }
-
-      // Main text layer
-      ctx.font = '200px "Creepster", cursive';
-      ctx.fillStyle = '#8b0000';
-      ctx.fillText(text, 1024, baseY);
-
-      // Highlight/wet blood layer
-      ctx.font = '200px "Creepster", cursive';
-      ctx.fillStyle = 'rgba(180, 0, 0, 0.4)';
-      ctx.fillText(text, 1024 - 2, baseY - 2);
-
-      // Heavy blood drips from text
-      const dripPositions = [180, 320, 480, 620, 780, 950, 1100, 1280, 1450, 1620, 1750, 1850];
-      for (const dripX of dripPositions) {
-        if (Math.random() > 0.3) {
-          const dripStartY = baseY + 60 + Math.random() * 40;
-          const dripH = 80 + Math.random() * 250;
-          const dripW = 6 + Math.random() * 12;
-
-          // Main drip body
-          ctx.fillStyle = `rgba(${80 + Math.random() * 40}, 0, 0, 0.9)`;
-          ctx.beginPath();
-          ctx.moveTo(dripX, dripStartY);
-          ctx.quadraticCurveTo(dripX - dripW, dripStartY + dripH * 0.3, dripX - dripW/2, dripStartY + dripH * 0.6);
-          ctx.quadraticCurveTo(dripX, dripStartY + dripH, dripX, dripStartY + dripH + dripW);
-          ctx.quadraticCurveTo(dripX, dripStartY + dripH, dripX + dripW/2, dripStartY + dripH * 0.6);
-          ctx.quadraticCurveTo(dripX + dripW, dripStartY + dripH * 0.3, dripX, dripStartY);
-          ctx.fill();
-
-          // Drip blob at end
-          ctx.beginPath();
-          ctx.arc(dripX, dripStartY + dripH + dripW * 0.5, dripW * 0.7, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Secondary thin drip
-          if (Math.random() > 0.5) {
-            const thinX = dripX + (Math.random() - 0.5) * 30;
-            const thinH = 40 + Math.random() * 100;
-            ctx.fillStyle = `rgba(70, 0, 0, 0.7)`;
-            ctx.beginPath();
-            ctx.ellipse(thinX, dripStartY + dripH + 30 + thinH/2, 2, thinH/2, 0, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-
-      // Handprint accent
-      ctx.save();
-      ctx.translate(1700, 650);
-      ctx.rotate(0.3);
-      ctx.fillStyle = 'rgba(80, 0, 0, 0.5)';
-      // Palm
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 45, 55, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Fingers
-      const fingerAngles = [-0.4, -0.15, 0.05, 0.25, 0.5];
-      const fingerLengths = [50, 65, 70, 60, 40];
-      for (let f = 0; f < 5; f++) {
-        ctx.save();
-        ctx.rotate(fingerAngles[f]);
-        ctx.beginPath();
-        ctx.ellipse(0, -55 - fingerLengths[f]/2, 12, fingerLengths[f]/2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-      ctx.restore();
-
-      const graffitiTexture = new THREE.CanvasTexture(graffitiCanvas);
-
-      const graffitiPlane = new THREE.Mesh(
-        new THREE.PlaneGeometry(tunnelWidth, 4),
-        new THREE.MeshBasicMaterial({
-          map: graffitiTexture,
-          transparent: true,
-          depthWrite: false
-        })
-      );
-      graffitiPlane.position.set(0, 1, endWallZ + 0.05);
-      tunnelGroup.add(graffitiPlane);
-
-      // Subtle light illuminating the end wall (matches tunnel lighting)
-      const endWallLight = new THREE.PointLight(0xff2200, 1.5, 15);
-      endWallLight.position.set(0, 2, endWallZ + 8);
-      scene.add(endWallLight);
-
-      scene.add(tunnelGroup);
-    }
-
-    function createLights() {
-      const ambient = new THREE.AmbientLight(0x3a2828, 2.2);
-      scene.add(ambient);
-
-      // Ceiling lights - reduced count, larger range
-      for (let i = 0; i < 12; i++) {
-        const z = 6 - i * 14;
-
-        const light = new THREE.PointLight(0xff2200, 5, 35);
-        light.position.set(0, 3.5, z);
-        scene.add(light);
-
-        tunnelLights.push({
-          light,
-          baseIntensity: 5,
-          flickerPhase: Math.random() * Math.PI * 2
-        });
-
-        // Bright emissive fixture - bloom will create natural glow
-        const fixture = new THREE.Mesh(
-          new THREE.BoxGeometry(0.7, 0.12, 0.35),
-          new THREE.MeshBasicMaterial({ color: 0xff6633 })
-        );
-        fixture.position.set(0, 3.92, z);
-        tunnelGroup.add(fixture);
-
-        // Inner bright core for stronger bloom
-        const core = new THREE.Mesh(
-          new THREE.BoxGeometry(0.5, 0.08, 0.25),
-          new THREE.MeshBasicMaterial({ color: 0xffaa66 })
-        );
-        core.position.set(0, 3.9, z);
-        tunnelGroup.add(core);
-      }
-    }
-
-    function createFlashlight() {
-      flashlight = new THREE.SpotLight(0xffeedd, 5, 50, Math.PI / 5, 0.3, 0.5);
-      flashlight.position.copy(camera.position);
-      scene.add(flashlight);
-      scene.add(flashlight.target);
-    }
-
-    function createFogLayers() {
-      fogLayers = new THREE.Group();
-
-      const fogMaterial = new THREE.MeshBasicMaterial({
-        color: 0x1a0a0a,
-        transparent: true,
-        opacity: 0.08,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
-
-      for (let i = 0; i < 25; i++) {
-        const fog = new THREE.Mesh(
-          new THREE.PlaneGeometry(6, 5),
-          fogMaterial.clone()
-        );
-        fog.position.set(0, 0.5, 5 - i * 4);
-        fog.material.opacity = 0.05 + (i / 25) * 0.1;
-        fogLayers.add(fog);
-      }
-
-      scene.add(fogLayers);
-    }
-
-    function createCreature() {
-      creature = new THREE.Group();
-
-      // Dark red-tint + fog:false so silhouette stays visible at any fog distance.
-      // MeshBasicMaterial ignores lighting → solid silhouette look.
-      const bodyMat = new THREE.MeshBasicMaterial({
-        color: 0x1a0505,
-        fog: false
-      });
-
-      // Torso: center at y=1.0, spans y=0 to y=2.0
-      const torsoW = 1.1, torsoH = 2.0, torsoD = 0.35;
-      const torso = new THREE.Mesh(
-        new THREE.BoxGeometry(torsoW, torsoH, torsoD),
-        bodyMat
-      );
-      torso.position.y = torsoH / 2;
-      creature.add(torso);
-
-      // Head sits on top of torso
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.42, 12, 12),
-        bodyMat
-      );
-      head.position.y = torsoH + 0.35;
-      creature.add(head);
-
-      // Neck (thin connector)
-      const neck = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22, 0.25, 0.22),
-        bodyMat
-      );
-      neck.position.y = torsoH + 0.05;
-      creature.add(neck);
-
-      // Arms — pivoted at the shoulder so they hang naturally and touch the torso
-      const armLen = 1.85;
-      const shoulderY = torsoH - 0.15;   // just below top of torso
-      const shoulderX = torsoW / 2 - 0.02; // flush with torso side
-
-      function makeArm(side) {
-        const shoulder = new THREE.Group();
-        shoulder.position.set(side * shoulderX, shoulderY, 0);
-        // Slight inward lean at the wrist (menacing reach pose)
-        shoulder.rotation.z = side * 0.18;
-
-        const upper = new THREE.Mesh(
-          new THREE.BoxGeometry(0.2, armLen, 0.14),
-          bodyMat
-        );
-        upper.position.y = -armLen / 2; // hang DOWN from shoulder pivot
-        shoulder.add(upper);
-
-        // Small shoulder cap sphere so the corner looks connected, not boxy
-        const cap = new THREE.Mesh(
-          new THREE.SphereGeometry(0.14, 10, 10),
-          bodyMat
-        );
-        shoulder.add(cap);
-
-        return shoulder;
-      }
-
-      creature.add(makeArm(-1)); // left
-      creature.add(makeArm(1));  // right
-
-      // Legs — same pivot trick at the hips
-      const legLen = 1.4;
-      const hipY = 0.05;
-      const hipX = 0.22;
-
-      function makeLeg(side) {
-        const hip = new THREE.Group();
-        hip.position.set(side * hipX, hipY, 0);
-
-        const leg = new THREE.Mesh(
-          new THREE.BoxGeometry(0.22, legLen, 0.16),
-          bodyMat
-        );
-        leg.position.y = -legLen / 2;
-        hip.add(leg);
-
-        return hip;
-      }
-
-      creature.add(makeLeg(-1));
-      creature.add(makeLeg(1));
-
-      // Ground the creature: legs extend down to y=-1.35 relative, floor is at y=-2
-      creature.visible = false;
-      creature.position.set(0, -0.65, -45);
-      scene.add(creature);
-    }
-
-    function spawnCreatureChase() {
-      // Spawn 8 units behind the player based on their ACTUAL facing direction,
-      // not a fixed z-offset — otherwise turning around puts spawn in front of you.
-      const forward = new THREE.Vector3();
-      camera.getWorldDirection(forward);
-      forward.y = 0;
-      if (forward.lengthSq() < 0.001) forward.set(0, 0, -1);
-      forward.normalize();
-
-      const spawnDistance = 8;
-      let spawnX = camera.position.x - forward.x * spawnDistance;
-      let spawnZ = camera.position.z - forward.z * spawnDistance;
-
-      // Keep spawn inside the tunnel interior (not outside walls or past ends)
-      spawnX = THREE.MathUtils.clamp(spawnX, -1.8, 1.8);
-      spawnZ = THREE.MathUtils.clamp(spawnZ, -57, 5);
-
-      // If clamping pulled the spawn point too close to the player (e.g. they're
-      // facing a side wall or standing at a tunnel end), fall back to the far end
-      // of the tunnel so there's always meaningful chase distance.
-      const dx = camera.position.x - spawnX;
-      const dz = camera.position.z - spawnZ;
-      if (Math.hypot(dx, dz) < 4) {
-        spawnZ = (camera.position.z > -26) ? -57 : 5;
-        spawnX = (Math.random() - 0.5) * 1.5;
-      }
-
-      creature.position.set(spawnX, -0.65, spawnZ);
-      creature.visible = true;
-      creatureVisible = true;
-      creatureChasing = true;
-      creatureLastTime = 0;
-      playMonsterAppear();
-      startChaseAudio();
-    }
-
-    function stopCreatureChase() {
-      creature.visible = false;
-      creatureVisible = false;
-      creatureChasing = false;
-      stopChaseAudio();
-    }
-
-    function updateCreature(time) {
-      if (!creatureVisible) return;
-
-      if (creatureChasing) {
-        const delta = creatureLastTime ? Math.min(time - creatureLastTime, 0.1) : 0;
-        creatureLastTime = time;
-
-        const dx = camera.position.x - creature.position.x;
-        const dz = camera.position.z - creature.position.z;
-        const dist = Math.hypot(dx, dz);
-
-        // Touch → force exit back to initial state (view mode)
-        if (dist < CREATURE_TOUCH_DISTANCE) {
-          if (controls && controls.isLocked) controls.unlock();
-          return;
-        }
-
-        // Slow, persistent advance toward the player
-        creature.position.x += (dx / dist) * CREATURE_CHASE_SPEED * delta;
-        creature.position.z += (dz / dist) * CREATURE_CHASE_SPEED * delta;
-
-        // Keep within tunnel bounds
-        creature.position.x = THREE.MathUtils.clamp(creature.position.x, -1.8, 1.8);
-        creature.position.z = THREE.MathUtils.clamp(creature.position.z, -58, 6);
-
-        // Face the player, gentle bob around grounded base y=-0.65
-        creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
-        creature.position.y = -0.65 + Math.sin(time * 2) * 0.05;
-      } else {
-        creature.lookAt(camera.position.x, creature.position.y, camera.position.z);
-        creature.rotation.z = Math.sin(time * 2) * 0.08;
-        creature.position.y = -0.65 + Math.sin(time * 1.5) * 0.04;
-      }
-    }
-
-    function setupMouseTracking() {
-      document.addEventListener('mousemove', (event) => {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      });
-    }
-
-    function updateFlashlight() {
-      flashlight.position.copy(camera.position);
-
-      if (isExploring) {
-        const direction = new THREE.Vector3();
-        camera.getWorldDirection(direction);
-        const targetPoint = camera.position.clone().add(direction.multiplyScalar(20));
-        flashlight.target.position.copy(targetPoint);
-      } else {
-        raycaster.setFromCamera(mouse, camera);
-        const targetPoint = camera.position.clone().add(
-          raycaster.ray.direction.multiplyScalar(20)
-        );
-        flashlight.target.position.copy(targetPoint);
-      }
-    }
-
-    function updateCameraParallax() {
-      const lookX = -mouse.x * 0.03;
-      const lookY = mouse.y * 0.02;
-      camera.rotation.x = lookY;
-      camera.rotation.y = lookX;
-    }
-
-    function checkDoorHover() {
-      if (doorMeshes.length === 0) return;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(doorMeshes);
-
-      if (intersects.length > 0) {
-        if (hoveredDoor !== intersects[0].object) {
-          if (hoveredDoor) {
-            hoveredDoor.material.emissiveIntensity = 0.3;
-          }
-          hoveredDoor = intersects[0].object;
-          hoveredDoor.material.emissiveIntensity = 0.9;
-          document.body.style.cursor = 'pointer';
-        }
-      } else if (hoveredDoor) {
-        hoveredDoor.material.emissiveIntensity = 0.3;
-        hoveredDoor = null;
-        document.body.style.cursor = 'crosshair';
-      }
-    }
-
-    function updateLightFlicker(time) {
-      if (reducedMotion) return;
-      tunnelLights.forEach((lightData) => {
-        const { light, baseIntensity, flickerPhase } = lightData;
-
-        const flicker =
-          Math.sin(time * 5 + flickerPhase) * 0.1 +
-          Math.sin(time * 13 + flickerPhase * 2) * 0.05 +
-          (Math.random() > 0.995 ? -0.4 : 0);
-
-        light.intensity = baseIntensity * (1 + flicker);
-      });
-    }
-
-    function triggerMassFlicker(duration = 2000) {
-      if (reducedMotion) return;
-      const startTime = performance.now();
-
-      function flicker() {
-        const elapsed = performance.now() - startTime;
-        if (elapsed > duration) {
-          tunnelLights.forEach(l => l.light.intensity = l.baseIntensity);
-          return;
-        }
-
-        // Keep interval >= 333ms (3Hz max) to stay under WCAG 2.3.1 threshold
-        tunnelLights.forEach(l => {
-          l.light.intensity = Math.random() > 0.5 ? l.baseIntensity * 0.3 : l.baseIntensity * 1.3;
-        });
-
-        setTimeout(flicker, 340 + Math.random() * 120);
-      }
-
-      flicker();
-    }
-
-    function initExplorationControls() {
-      controls = new PointerLockControls(camera, document.body);
-
-      document.addEventListener('keydown', (e) => {
-        // M works globally (not just during exploration) — no text inputs on the page
-        if (e.code === 'KeyM') {
-          if (!audioCtx) initAudio();
-          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-          setAudioMuted(!audioMuted);
-          return;
-        }
-        if (!isExploring) return;
-        switch(e.code) {
-          case 'KeyW': moveState.forward = true; break;
-          case 'KeyS': moveState.backward = true; break;
-          case 'KeyA': moveState.left = true; break;
-          case 'KeyD': moveState.right = true; break;
-          case 'ShiftLeft':
-          case 'ShiftRight': moveState.sprint = true; break;
-        }
-      });
-
-      document.addEventListener('keyup', (e) => {
-        switch(e.code) {
-          case 'KeyW': moveState.forward = false; break;
-          case 'KeyS': moveState.backward = false; break;
-          case 'KeyA': moveState.left = false; break;
-          case 'KeyD': moveState.right = false; break;
-          case 'ShiftLeft':
-          case 'ShiftRight': moveState.sprint = false; break;
-        }
-      });
-
-      controls.addEventListener('lock', () => {
-        isExploring = true;
-        document.querySelector('.scroll-container').style.display = 'none';
-        document.querySelector('header').style.display = 'none';
-        document.querySelector('.depth-indicator').style.display = 'none';
-        document.getElementById('crosshair').style.display = 'block';
-
-        // Show onboarding hint, auto-fade after 3s
-        const onboarding = document.getElementById('onboarding');
-        onboarding.classList.add('visible');
-        setTimeout(() => onboarding.classList.remove('visible'), 3500);
-
-        // Start 1-minute spawn timer for the chase
-        if (creatureSpawnTimer) clearTimeout(creatureSpawnTimer);
-        creatureSpawnTimer = setTimeout(() => {
-          if (isExploring) spawnCreatureChase();
-        }, CREATURE_SPAWN_DELAY_MS);
-      });
-
-      controls.addEventListener('unlock', () => {
-        isExploring = false;
-        document.querySelector('.scroll-container').style.display = 'block';
-        document.querySelector('header').style.display = 'flex';
-        document.querySelector('.depth-indicator').style.display = 'flex';
-        document.getElementById('crosshair').style.display = 'none';
-        document.getElementById('onboarding').classList.remove('visible');
-
-        // Cancel pending spawn and destroy any active creature
-        if (creatureSpawnTimer) {
-          clearTimeout(creatureSpawnTimer);
-          creatureSpawnTimer = null;
-        }
-        stopCreatureChase();
-      });
-
-      document.querySelector('.cta-btn').addEventListener('click', () => {
-        controls.lock();
-      });
-    }
-
-    function updateMovement() {
-      if (!isExploring) return;
-
-      const time = performance.now();
-      const delta = (time - prevTime) / 1000;
-      prevTime = time;
-
-      const speed = moveState.sprint ? 120.0 : 50.0;
-
-      velocity.x -= velocity.x * 10.0 * delta;
-      velocity.z -= velocity.z * 10.0 * delta;
-
-      direction.z = Number(moveState.forward) - Number(moveState.backward);
-      direction.x = Number(moveState.right) - Number(moveState.left);
-      direction.normalize();
-
-      if (moveState.forward || moveState.backward) {
-        velocity.z -= direction.z * speed * delta;
-      }
-      if (moveState.left || moveState.right) {
-        velocity.x -= direction.x * speed * delta;
-      }
-
-      controls.moveRight(-velocity.x * delta);
-      controls.moveForward(-velocity.z * delta);
-
-      camera.position.y = 0.5;
-
-      const pos = camera.position;
-      pos.x = THREE.MathUtils.clamp(pos.x, -2, 2);
-      pos.z = THREE.MathUtils.clamp(pos.z, -58, 6);
-    }
-
-    function setupPostProcessing() {
-      composer = new EffectComposer(renderer);
-      composer.addPass(new RenderPass(scene, camera));
-
-      bloomEffect = new BloomEffect({
-        intensity: 1.5,
-        luminanceThreshold: 0.2,
-        luminanceSmoothing: 0.8,
-        mipmapBlur: true
-      });
-
-      const vignetteEffect = new VignetteEffect({
-        darkness: 0.6,
-        offset: 0.3
-      });
-
-      if (reducedMotion) {
-        // Skip chromatic aberration and noise — strobe risk + visual churn
-        composer.addPass(new EffectPass(camera, bloomEffect, vignetteEffect));
-        return;
-      }
-
-      chromaticAberrationEffect = new ChromaticAberrationEffect({
-        offset: new THREE.Vector2(0.002, 0.002),
-        radialModulation: true,
-        modulationOffset: 0.15
-      });
-
-      noiseEffect = new NoiseEffect({
-        blendFunction: BlendFunction.OVERLAY,
-        premultiply: true
-      });
-      noiseEffect.blendMode.opacity.value = 0.12;
-
-      composer.addPass(new EffectPass(camera,
-        bloomEffect,
-        chromaticAberrationEffect,
-        vignetteEffect,
-        noiseEffect
-      ));
-    }
-
-    function triggerDistortion(intensity = 0.01, duration = 500) {
-      if (reducedMotion || !chromaticAberrationEffect) return;
-      const originalOffset = 0.002;
-      chromaticAberrationEffect.offset.set(intensity, intensity);
-
-      setTimeout(() => {
-        chromaticAberrationEffect.offset.set(originalOffset, originalOffset);
-      }, duration);
-    }
-
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function setupScrollDetection() {
-      const chambers = document.querySelectorAll('.chamber');
-      const dots = document.querySelectorAll('.depth-dot');
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const index = Array.from(chambers).indexOf(entry.target);
-            currentSection = index;
-            targetZ = 5 - index * sectionDepth;
-
-            dots.forEach((dot, i) => {
-              dot.classList.toggle('active', i === index);
-            });
-          }
-        });
-      }, { threshold: 0.5 });
-
-      chambers.forEach(chamber => observer.observe(chamber));
-    }
-
-    function setupScrollEvents() {
-      gsap.registerPlugin(ScrollTrigger);
-
-      ScrollTrigger.create({
-        trigger: '#chamber-1',
-        start: 'top center',
-        onEnter: () => {
-          triggerMassFlicker(800);
-        }
-      });
-
-      ScrollTrigger.create({
-        trigger: '#chamber-2',
-        start: 'top center',
-        onEnter: () => {
-          triggerDistortion(0.008, 600);
-          setTimeout(() => triggerMassFlicker(500), 300);
-        }
-      });
-
-      ScrollTrigger.create({
-        trigger: '#chamber-3',
-        start: 'top center',
-        onEnter: () => {
-          triggerBlackout(400);
-          setTimeout(() => triggerDistortion(0.015, 1200), 400);
-        }
-      });
-
-      ScrollTrigger.create({
-        trigger: '.scroll-container',
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: true,
-        onUpdate: (self) => {
-          if (isExploring) return;
-          const progress = self.progress;
-
-          scene.fog.density = 0.045 + progress * 0.025;
-
-          if (!reducedMotion && chromaticAberrationEffect && noiseEffect) {
-            const aberration = 0.002 + progress * 0.004;
-            chromaticAberrationEffect.offset.set(aberration, aberration);
-            noiseEffect.blendMode.opacity.value = 0.12 + progress * 0.12;
-          }
-        }
-      });
-    }
-
-    function triggerBlackout(duration = 500) {
-      if (reducedMotion) return;
-      const originalIntensities = tunnelLights.map(l => l.light.intensity);
-      tunnelLights.forEach(l => l.light.intensity = 0);
-      flashlight.intensity = 0;
-
-      setTimeout(() => {
-        tunnelLights.forEach((l, i) => l.light.intensity = originalIntensities[i]);
-        flashlight.intensity = 5;
-      }, duration);
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      const time = performance.now() * 0.001;
-
-      if (isExploring) {
-        updateMovement();
-      } else {
-        currentZ += (targetZ - currentZ) * 0.025;
-        camera.position.z = currentZ;
-
-        camera.position.x = Math.sin(time * 0.5) * 0.08;
-        camera.position.y = 0.5 + Math.cos(time * 0.3) * 0.04;
-        camera.rotation.z = Math.sin(time * 0.2) * 0.004;
-
-        updateCameraParallax();
-      }
-
-      updateFlashlight();
-      updateLightFlicker(time);
-      updateCreature(time);
-
-      composer.render();
-    }
-
-    bootstrap();
-  </script>
+  <script type="module" src="js/main.js?v=14"></script>
 </body>
 </html>
